@@ -21,7 +21,7 @@ OPTIONS = {
         'NSMicrophoneUsageDescription': 'Acceso MIDI requerido',
     },
     # 'docs' como directorio — py2app lo copia entero a Resources/docs/
-    'resources': ['rrresponseq.icns', 'config.py', 'banks.json', 'settings.json', 'docs'],
+    'resources': ['rrresponseq.icns', 'config.py', 'settings.json', 'scripts.json', 'docs'],
     # deployment target controlado con MACOSX_DEPLOYMENT_TARGET=10.13 al compilar
 }
 
