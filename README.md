@@ -126,13 +126,7 @@ Create custom scripts in Settings → SCR tab.
 - Buttons S CC 21-28 → Stochastic toggle
 - Buttons M CC 31-38 → Stochastic randomize
 
-### Launchkey MK4 49
-- Knobs CC 21-28 → Current page params
-- Pads → Keyboard note input
-- NEXT/PREV → Navigate parameters
-- SHIFT → Rest step when recording
-
-### Launchpad MK1
+### Launchpad 
 - 16×8 grid → Keyboard note input
 - Right column → Track select + mute
 - Top row → View modes
@@ -140,11 +134,7 @@ Create custom scripts in Settings → SCR tab.
 
 ## Configuration
 
-Edit `config.py` to customize:
-- MIDI port names and numbers
-- Default BPM (120)
-- Default scale and play mode
-- Knob/fader CC mappings
+You can use the UI configurator (using CMD+M) or just Config.py. 
 
 ## Documentation
 
@@ -172,8 +162,10 @@ In short:
 
 ## Credits
 
-Built by [your name/handle]  
+Built by Uge Ortiz / AZ-Rotator / Claude Code  
 Inspired by Euclidean rhythms, generative music, and hardware sequencers.
+Contact: uge@az-rotator.com 
+https://www.instagram.com/rrresponseq/
 
 Font: [Disket Mono](https://github.com/romeovs/disket) by Romeo Van Snick
 
