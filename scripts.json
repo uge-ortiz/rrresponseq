@@ -4,187 +4,187 @@
     {
       "id": "euclidean_random",
       "name": "Random Euclidean",
-      "desc": "Euclidiano aleatorio cada vuelta",
+      "desc": "Random Euclidean pattern each cycle",
       "code": "pulses = randint(1, steps)\npattern = euclidean(pulses, steps)"
     },
     {
       "id": "duplicate_steps",
       "name": "Duplicate Steps",
-      "desc": "Duplicar cada step activo",
+      "desc": "Stutter every active step",
       "code": "pattern = stutter(pattern, 2)"
     },
     {
       "id": "rotate_random",
       "name": "Rotate Random",
-      "desc": "Rotar aleatoriamente cada vuelta",
+      "desc": "Random rotation each cycle",
       "code": "pattern = rotate(pattern, randint(0, steps-1))"
     },
     {
       "id": "wobble_growth",
       "name": "Wobble Growth",
-      "desc": "Mutación creciente cada vuelta",
+      "desc": "Mutation grows over time",
       "code": "amt = 0.1 + (loop_count * 0.05)\npattern = wobble(pattern, min(amt, 0.4))"
     },
     {
       "id": "sparse_decay",
       "name": "Sparse Decay",
-      "desc": "Se vacía lentamente cada vuelta",
+      "desc": "Pattern empties slowly each cycle",
       "code": "pattern = [p and random() > (loop_count * 0.03) for p in pattern]"
     },
     {
       "id": "polyrhythm_wobble",
       "name": "Polyrhythm Wobble",
-      "desc": "Polirritmo con variación",
+      "desc": "Polyrhythm with variation",
       "code": "pattern = polyrhythm(steps, 3, 4)\npattern = wobble(pattern, 0.1)"
     },
     {
       "id": "alternating_shift",
       "name": "Alternating Shift",
-      "desc": "Patrón alternante",
+      "desc": "Alternating pattern",
       "code": "pattern = alternating(steps, 2)"
     },
     {
       "id": "drunk_walk",
       "name": "Drunk Walk",
-      "desc": "Patrón que cambia lentamente",
+      "desc": "Pattern changes slowly",
       "code": "pattern = drunk_walk(steps, 0.3)"
     },
     {
       "id": "octave_jumper",
       "name": "Octave Jumper",
-      "desc": "Saltos aleatorios de octava ±2",
+      "desc": "Random octave jumps +-2",
       "code": "octave = choice([-2, -1, 0, 0, 1, 2])"
     },
     {
       "id": "accent_dance",
       "name": "Accent Dance",
-      "desc": "Velocity oscilante con seno",
+      "desc": "Velocity oscillates with sine",
       "code": "velocity = int(70 + 50 * sin(loop_count * 0.5))"
     },
     {
       "id": "gate_pulse",
       "name": "Gate Pulse",
-      "desc": "Gate respira entre staccato y legato",
+      "desc": "Gate breathes between staccato and legato",
       "code": "gate = 0.3 + 0.6 * abs(sin(loop_count * 0.3))"
     },
     {
       "id": "ratchet_storm",
       "name": "Ratchet Storm",
-      "desc": "Ratchets aleatorios cada vuelta",
+      "desc": "Random ratchets each cycle",
       "code": "ratchet = choice([1, 1, 1, 2, 2, 3, 4])\nratchet_div = random()"
     },
     {
       "id": "mode_morph",
       "name": "Mode Morph",
-      "desc": "Cambia play mode cada 4 vueltas",
+      "desc": "Changes play mode every 4 cycles",
       "code": "if loop_count % 4 == 0:\n    play_mode = randint(0, 5)"
     },
     {
       "id": "interval_climb",
       "name": "Interval Climb",
-      "desc": "Sube de grado en escala",
+      "desc": "Climbs scale degrees",
       "code": "interval = (loop_count % 7) - 3"
     },
     {
       "id": "prob_breathing",
       "name": "Prob Breathing",
-      "desc": "Probabilidad respira con seno lento",
+      "desc": "Probability breathes with slow sine",
       "code": "prob = 0.5 + 0.4 * sin(loop_count * 0.2)"
     },
     {
       "id": "melodic_walk",
       "name": "Melodic Walk",
-      "desc": "Octava + interval random walk",
+      "desc": "Octave and interval random walk",
       "code": "octave = max(-2, min(2, octave + choice([-1, 0, 0, 0, 1])))\ninterval = max(-5, min(5, interval + choice([-1, 0, 0, 1])))"
     },
     {
       "id": "evolving_euclid",
       "name": "Evolving Euclid",
-      "desc": "Euclid con pulses pulsantes + accent",
+      "desc": "Pulsing Euclidean pulses with accent",
       "code": "p = 3 + int(4 * abs(sin(loop_count * 0.4)))\npattern = euclidean(p, steps)\nvelocity = 80 + int(40 * sin(loop_count * 0.7))"
     },
     {
       "id": "chaos_burst",
       "name": "Chaos Burst",
-      "desc": "Caos completo cada 8 vueltas",
+      "desc": "Full chaos every 8 cycles",
       "code": "if loop_count % 8 == 0:\n    pattern = [random() > 0.5 for _ in range(steps)]\n    octave = randint(-1, 1)\n    velocity = randint(60, 120)\nelse:\n    pattern = wobble(pattern, 0.1)"
     },
     {
       "id": "swing_modulation",
       "name": "Swing Modulation",
-      "desc": "Swing oscilante",
+      "desc": "Oscillating swing",
       "code": "swing = 0.15 + 0.2 * abs(sin(loop_count * 0.25))"
     },
     {
       "id": "note_length_dance",
       "name": "Note Length Dance",
-      "desc": "Cambia longitud de nota",
+      "desc": "Note length changes each cycle",
       "code": "note_len = choice([1, 1, 2, 2, 4])"
     },
     {
       "id": "breath",
       "name": "Breath",
-      "desc": "Velocity + gate + prob respiran juntos",
+      "desc": "Velocity, gate and prob breathe together",
       "code": "phase = loop_count * 0.3\nvelocity = int(64 + 55 * sin(phase))\ngate = 0.25 + 0.7 * abs(sin(phase * 0.7))\nprob = max(0.2, 0.4 + 0.55 * abs(sin(phase * 0.5)))"
     },
     {
       "id": "pendulum",
       "name": "Pendulum",
-      "desc": "Interval péndulo, octava sigue, vel contraria",
+      "desc": "Interval pendulum, octave follows, vel inverse",
       "code": "interval = int(round(4 * sin(loop_count * 0.4)))\nif loop_count % 8 == 0:\n    octave = choice([-1, 0, 0, 1])\nvelocity = int(80 + 35 * cos(loop_count * 0.4))"
     },
     {
       "id": "tidal",
       "name": "Tidal",
-      "desc": "Marea lenta — todo sube y baja junto",
+      "desc": "Slow tide, everything rises and falls",
       "code": "tide = sin(loop_count * 0.1)\nvelocity = int(80 + 40 * tide)\ngate = 0.4 + 0.5 * abs(tide)\noctave = int(round(tide))\ninterval = int(round(3 * tide))"
     },
     {
       "id": "ratchet_fever",
       "name": "Ratchet Fever",
-      "desc": "Ratchets escalan cada 8 vueltas y estallan",
+      "desc": "Ratchets escalate every 8 cycles then burst",
       "code": "r = 1 + (loop_count % 8) // 2\nratchet = r\nif loop_count % 8 == 7:\n    pattern = [random() > 0.3 for _ in range(steps)]\nvelocity = int(75 + 7 * r)\ngate = max(0.1, 0.85 - r * 0.1)"
     },
     {
       "id": "harmonic_rise",
       "name": "Harmonic Rise",
-      "desc": "Interval sube escala, espejo en el pico",
+      "desc": "Interval climbs scale, mirrors at peak",
       "code": "interval = (loop_count % 8) - 4\nif loop_count % 8 == 7:\n    pattern = mirror(pattern)\nvelocity = int(65 + 50 * abs(sin(loop_count * 0.55)))"
     },
     {
       "id": "drunk_melody",
       "name": "Drunk Melody",
-      "desc": "Patrón borracho + octava + interval walk",
+      "desc": "Drunk walk pattern, octave and interval walk",
       "code": "pattern = drunk_walk(steps, 0.25)\noctave = max(-2, min(2, octave + choice([-1, 0, 0, 0, 1])))\ninterval = max(-5, min(5, interval + choice([-1, 0, 0, 1])))\nvelocity = randint(65, 105)"
     },
     {
       "id": "ghost_notes",
       "name": "Ghost Notes",
-      "desc": "Prob + vel aleatorio, notas fantasma",
+      "desc": "Low prob and random velocity, ghost feel",
       "code": "prob = 0.2 + 0.35 * random()\nvelocity = choice([25, 35, 50, 65, 85, 105, 115])\ngate = choice([0.1, 0.15, 0.25, 0.45, 0.75])\nratchet = choice([1, 1, 1, 2])"
     },
     {
       "id": "euclid_morph",
       "name": "Euclid Morph",
-      "desc": "Pulses oscilan, vel y gate se adaptan",
+      "desc": "Oscillating pulses, vel and gate adapt",
       "code": "p = 2 + int(5 * abs(sin(loop_count * 0.3)))\npattern = euclidean(p, steps)\nvelocity = 80 + int(p * 5)\ngate = 0.35 + p * 0.07\nnote_len = 1 if p > 5 else choice([1, 2, 2, 4])"
     },
     {
       "id": "cascade",
       "name": "Cascade",
-      "desc": "Stutter + octava baja, luego wobble",
+      "desc": "Stutter and octave drops, then wobble",
       "code": "if loop_count % 4 == 0:\n    pattern = stutter(pattern, 2)\n    octave = max(-2, octave - 1)\nelse:\n    pattern = wobble(pattern, 0.15)\nvelocity = int(90 + 30 * sin(loop_count * 0.6))"
     },
     {
       "id": "phase_drift",
       "name": "Phase Drift",
-      "desc": "Rotación lenta + interval + gate sinusoidal",
+      "desc": "Slow rotation, interval and gate sinusoidal",
       "code": "pattern = rotate(pattern, loop_count % steps)\ninterval = int(3 * sin(loop_count * 0.25))\ngate = 0.2 + 0.7 * abs(sin(loop_count * 0.15))"
     },
     {
       "id": "tension_arc",
       "name": "Tension Arc",
-      "desc": "Octava + interval + vel suben en 16 vueltas y bajan",
+      "desc": "Octave, interval, vel and gate arc over 16 cycles",
       "code": "phase = (loop_count % 16) / 16.0\noctave = int(round(-1 + 2 * abs(sin(phase * pi))))\ninterval = int(round(-3 + 6 * phase))\nvelocity = int(60 + 60 * abs(sin(phase * pi)))\ngate = 0.3 + 0.6 * phase"
     }
   ],

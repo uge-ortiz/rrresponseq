@@ -3589,9 +3589,14 @@ class Sequencer:
 
     def _load_scripts_library(self):
         """Cargar librería de scripts desde scripts.json."""
-        scripts_file = os.path.join(os.path.dirname(__file__), 'scripts.json')
+        # En app compilada (py2app): Resources está junto al ejecutable en Contents/MacOS/../Resources
+        if getattr(sys, 'frozen', False):
+            base = os.path.normpath(os.path.join(os.path.dirname(sys.executable), '..', 'Resources'))
+        else:
+            base = os.path.dirname(os.path.abspath(__file__))
+        scripts_file = os.path.join(base, 'scripts.json')
         try:
-            with open(scripts_file, 'r') as f:
+            with open(scripts_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 # Combinar presets y custom en un dict por ID
                 lib = {}
@@ -3606,9 +3611,13 @@ class Sequencer:
 
     def _save_scripts_library(self):
         """Guardar librería de scripts en scripts.json."""
-        scripts_file = os.path.join(os.path.dirname(__file__), 'scripts.json')
+        if getattr(sys, 'frozen', False):
+            base = os.path.normpath(os.path.join(os.path.dirname(sys.executable), '..', 'Resources'))
+        else:
+            base = os.path.dirname(os.path.abspath(__file__))
+        scripts_file = os.path.join(base, 'scripts.json')
         try:
-            with open(scripts_file, 'r') as f:
+            with open(scripts_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
         except:
             data = {'version': 1, 'presets': [], 'custom': []}
@@ -3617,7 +3626,7 @@ class Sequencer:
         data['custom'] = [s for s in self.scripts_lib.values()
                          if s['id'] not in [p['id'] for p in data.get('presets', [])]]
 
-        with open(scripts_file, 'w') as f:
+        with open(scripts_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2)
 
     def _file_save(self, name=None):
