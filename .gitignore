@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+build_env/
+build_env_universal/
+rrresponseq-macOS/
+rrresponseq-macOS.zip
+*.app/
+dist/
+*.icns
+*.iconset/
+*.png
+*.svg
+
+# User data
+banks.json
+settings.json
+saves/
+
+# Logs
+*.log
+
+# Temp
+.claude/
+__pycache__
+.pytest_cache/

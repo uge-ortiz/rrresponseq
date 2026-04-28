@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>rrresponseq — User Guide</title>
+<style>
+@font-face {
+  font-family: 'Disket Mono';
+  src: url('/font/disket-mono.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #454545;
+  --bg-nav: #3e3e3e;
+  --border: #2e2e2e;
+  --text:   #ffffff;
+  --muted:  #8C9AA3;
+  --dim:    #3A4A53;
+  --font:   'Disket Mono', 'Courier New', monospace;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  grid-template-rows: 56px 1fr;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 36px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-nav);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo svg { width: 52px; height: 32px; }
+
+/* live indicator — eliminado (docs es referencia estática) */
+#live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--dim); margin-left: auto;
+  transition: background 0.3s;
+}
+#live-dot.live { background: #00ff88; }
+#live-label { font-size: 9px; color: var(--dim); letter-spacing: 0.15em; }
+
+/* ── SIDEBAR ── */
+nav {
+  border-right: 1px solid var(--border);
+  padding: 36px 0;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  background: var(--bg-nav);
+}
+nav::-webkit-scrollbar { width: 0; }
+nav ul { list-style: none; }
+.nav-section {
+  padding: 8px 24px 4px;
+  font-size: 9px; color: var(--dim);
+  letter-spacing: 0.2em; margin-top: 16px;
+}
+nav a {
+  display: block; padding: 5px 24px;
+  color: var(--muted); text-decoration: none;
+  font-size: 11px; letter-spacing: 0.06em;
+  transition: color 0.12s;
+}
+nav a:hover { color: var(--text); }
+nav a.active { color: var(--text); }
+nav a.active::before { content: '▶  '; font-size: 7px; }
+
+/* ── MAIN ── */
+main { padding: 72px 72px 120px; max-width: 900px; }
+
+/* ── SECTIONS ── */
+.section { margin-bottom: 96px; }
+.section-tag { font-size: 9px; letter-spacing: 0.25em; color: var(--dim); margin-bottom: 10px; }
+h1 { font-size: 48px; font-weight: normal; letter-spacing: 0.05em; line-height: 1.1; margin-bottom: 20px; }
+h2 { font-size: 32px; font-weight: normal; letter-spacing: 0.05em; margin-bottom: 14px; }
+.lead { font-size: 12px; color: var(--muted); max-width: 600px; line-height: 1.9; margin-bottom: 40px; letter-spacing: 0.04em; }
+hr { border: none; border-top: 1px solid var(--border); margin: 44px 0; }
+
+/* ── PAGE INDEX ── */
+.page-index { display: flex; flex-direction: column; gap: 10px; margin-bottom: 48px; }
+.page-index-item {
+  display: flex; align-items: center; gap: 14px;
+  color: var(--muted); font-size: 11px; letter-spacing: 0.08em;
+  text-decoration: none; transition: color 0.12s;
+}
+.page-index-item:hover { color: var(--text); }
+.page-index-item .num {
+  width: 26px; height: 26px; border: 1px solid var(--dim);
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 11px; flex-shrink: 0;
+}
+.page-index-item:hover .num { border-color: var(--text); }
+.page-index-item .arrow { flex:1; height:1px; background:var(--border); max-width:120px; }
+
+/* ── PARAM LIST ── */
+.param-list { display: flex; flex-direction: column; }
+.param {
+  display: grid; grid-template-columns: 26px 110px 1fr;
+  gap: 18px; align-items: start;
+  padding: 18px 0; border-bottom: 1px solid var(--border);
+}
+.param:first-child { border-top: 1px solid var(--border); }
+.param-num {
+  width: 26px; height: 26px; border: 1px solid var(--dim);
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 2px;
+}
+.param-name { font-size: 12px; letter-spacing: 0.1em; margin-top: 4px; }
+.param-desc { font-size: 11px; color: var(--muted); line-height: 1.8; letter-spacing: 0.03em; }
+.param-desc strong { color: var(--text); font-weight: normal; }
+.param-desc a { color: var(--muted); }
+
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 11px; }
+th { text-align: left; padding: 8px 0; border-bottom: 1px solid var(--dim); color: var(--dim); font-weight: normal; letter-spacing: 0.12em; font-size: 9px; }
+td { padding: 10px 0; border-bottom: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+td:first-child { color: var(--text); padding-right: 24px; white-space: nowrap; }
+
+/* ── CALLOUT ── */
+.callout { border-left: 2px solid var(--dim); padding: 10px 18px; margin: 20px 0; color: var(--muted); font-size: 11px; letter-spacing: 0.03em; line-height: 1.9; }
+.callout strong { color: var(--text); font-weight: normal; }
+
+/* ── KBD ── */
+kbd { display: inline-block; padding: 1px 6px; border: 1px solid var(--dim); border-radius: 3px; font-family: var(--font); font-size: 10px; color: var(--muted); letter-spacing: 0.04em; }
+
+/* ════════════════════════════════════════════════
+   SEQ RENDERS — réplica vectorial estática de la UI
+   Coordenadas 1:1 con el canvas real 1440×920
+   ════════════════════════════════════════════════ */
+.seq-render-wrap {
+  width: 100%; position: relative;
+  margin: 32px 0 48px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px; overflow: hidden;
+  background: #3b3b3b;
+}
+.seq-render {
+  width: 1440px; height: 920px;
+  background: #3b3b3b;
+  font-family: var(--font);
+  color: #fff;
+  position: relative;
+  transform-origin: top left;
+  /* scale set by JS */
+}
+.sr-page  { position:absolute; left:48px;   top:40px; font-size:96px; line-height:108px; color:#A1A3A5; }
+.sr-mode  { position:absolute; left:672px;  top:31px; font-size:96px; line-height:108px; color:#A1A3A5; }
+.sr-bpm   { position:absolute; left:1191px; top:40px; font-size:96px; line-height:108px; color:#fff; }
+.sr-cell  { position:absolute; width:330px; height:190px; }
+.sr-val   { font-size:96px; line-height:84px; color:#fff; white-space:nowrap; overflow:hidden; }
+.sr-name  { position:absolute; top:134px; font-size:64px; line-height:51px; color:#8C9AA3; white-space:nowrap; }
+.sr-val.orange { color:#FF8C00; }
+.sr-val.dim    { color:#3A4A53; }
+.sr-trk { position:absolute; left:52px; top:756px; width:280px; height:120px; display:flex; align-items:center; justify-content:center; font-size:96px; }
+.sr-conf-hdr { position:absolute; left:48px; top:40px; font-size:96px; line-height:108px; color:#A1A3A5; }
+.sr-cf-row { position:absolute; height:120px; }
+.sr-cf-row::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:3px; background:#3A4A53; }
+.sr-cf-name { position:absolute; left:0; top:0; font-size:48px; line-height:120px; color:#8C9AA3; }
+.sr-cf-val  { position:absolute; right:0; top:0; font-size:52px; line-height:120px; color:#fff; }
+.sr-cf-val.orange { color:#FF8C00; }
+.sr-cf-val.dim    { color:#3A4A53; }
+.sr-tab { position:absolute; bottom:28px; font-size:96px; line-height:108px; }
+.sr-tab.on  { color:#fff; }
+.sr-tab.off { color:#3A4A53; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- HEADER -->
+<header>
+  <a href="#intro" style="display:flex;align-items:center;text-decoration:none;color:#fff">
+    <svg viewBox="0 0 2142 2142" fill="none" style="width:44px;height:44px">
+      <circle cx="1071" cy="1071" r="1071" fill="#0B0A0A"/>
+      <path d="M597.392 852H852.094L741.314 1070.83H488.429L597.392 852Z" fill="white"/>
+      <path d="M1180.35 852H1435.05L1324.27 1070.83H1071.38L1180.35 852Z" fill="white"/>
+      <path d="M1763.3 852H2018L1907.22 1070.83H1654.33L1763.3 852Z" fill="white"/>
+      <path d="M306.823 852H561.524L450.745 1070.83H197.859L306.823 852Z" fill="white"/>
+      <path d="M889.777 852H1144.48L1033.7 1070.83H780.813L889.777 852Z" fill="white"/>
+      <path d="M1472.73 852H1727.43L1616.65 1070.83H1363.77L1472.73 852Z" fill="white"/>
+      <path d="M186.963 1096.34H441.665L330.886 1315.17H78L186.963 1096.34Z" fill="white"/>
+      <path d="M769.916 1096.34H1024.62L913.839 1315.17H660.953L769.916 1096.34Z" fill="white"/>
+      <path d="M1352.87 1096.34H1607.57L1496.79 1315.17H1243.91L1352.87 1096.34Z" fill="white"/>
+    </svg>
+  </a>
+</header>
+
+<!-- SIDEBAR -->
+<nav>
+  <ul>
+    <li><div class="nav-section">OVERVIEW</div></li>
+    <li><a href="#intro">INTRODUCTION</a></li>
+    <li><a href="#interface">INTERFACE</a></li>
+    <li><a href="#tracks">TRACKS</a></li>
+    <li><div class="nav-section">KNOB PAGES</div></li>
+    <li><a href="#page-seq">A · SEQ</a></li>
+    <li><a href="#page-note">B · NOTE</a></li>
+    <li><a href="#page-fx">C · FX</a></li>
+    <li><a href="#page-conf">D · CONF</a></li>
+    <li><div class="nav-section">WORKFLOW</div></li>
+    <li><a href="#step-record">STEP RECORD</a></li>
+    <li><a href="#patterns">PATTERNS & BANKS</a></li>
+    <li><a href="#play-modes">PLAY MODES</a></li>
+    <li><a href="#scales">SCALES</a></li>
+    <li><div class="nav-section">SETTINGS</div></li>
+    <li><a href="#conf-view">CONF VIEW</a></li>
+    <li><a href="#chain-export">CHAIN & MIDI EXPORT</a></li>
+    <li><a href="#mapping">CC MAPPING</a></li>
+    <li><a href="#impexp">IMP / EXP</a></li>
+    <li><a href="#shortcuts">SHORTCUTS</a></li>
+  </ul>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <!-- ══ INTRO ══ -->
+  <section class="section" id="intro">
+    <div class="section-tag">RRRESPONSEQ</div>
+    <h1>USER GUIDE</h1>
+    <p class="lead">
+      RRRESPONSEQ IS A SEQUENCER DESIGNED FOR LIVE PERFORMANCE, BUT ALSO USEFUL AND FUN FOR CREATING WILD IDEAS IN THE STUDIO.
+      IT'S BUILT TO REDUCE THE COMPLEXITY OF A DAW WHILE GIVING ACCESS TO EUCLIDEAN AND STOCHASTIC FUNCTIONS,
+      DIFFERENT LENGTHS, PLAYBACK MODES, AND SOME EXPERIMENTAL IDEAS LIKE PATTERN MORPHING.
+      IT IS CURRENTLY IN DEVELOPMENT — YOU MAY ENCOUNTER SOME ISSUES.
+      IF YOU HAVE ANY QUESTIONS, FEEL FREE TO REACH OUT AT <a href="mailto:uge@az-rotator.com" style="color:#fff">UGE@AZ-ROTATOR.COM</a>.
+    </p>
+    <div class="page-index">
+      <a href="#page-seq"  class="page-index-item"><span class="num">A</span><span class="arrow"></span><span>SEQ PAGE — RHYTHM & TIMING</span></a>
+      <a href="#page-note" class="page-index-item"><span class="num">B</span><span class="arrow"></span><span>NOTE PAGE — PITCH & MELODY</span></a>
+      <a href="#page-fx"   class="page-index-item"><span class="num">C</span><span class="arrow"></span><span>FX PAGE — EFFECTS & ARTICULATION</span></a>
+      <a href="#page-conf" class="page-index-item"><span class="num">D</span><span class="arrow"></span><span>CONF PAGE — ROUTING & SETTINGS</span></a>
+      <a href="#chain-export" class="page-index-item"><span class="num">⇣</span><span class="arrow"></span><span>CHAIN & MIDI EXPORT</span></a>
+    </div>
+    <hr>
+    <p class="lead" style="margin-bottom:0">
+      OPEN THE APP → INTERFACE LOADS AT <strong style="color:#fff">localhost:5001</strong>.
+      SELECT A TRACK. PRESS PLAY. ADJUST PULSES AND STEPS TO SHAPE THE EUCLIDEAN RHYTHM.
+    </p>
+  </section>
+
+  <!-- ══ INTERFACE ══ -->
+  <section class="section" id="interface">
+    <div class="section-tag">OVERVIEW</div>
+    <h2>INTERFACE</h2>
+    <p class="lead">THE WEB UI RUNS AT 1440×920 AND SCALES AUTOMATICALLY TO ANY SCREEN SIZE. THE RENDER BELOW IS LIVE WHEN THE APP IS RUNNING.</p>
+
+    <div class="seq-render-wrap">
+      <div class="seq-render">
+        <div class="sr-page">A·SEQ</div>
+        <div class="sr-mode">FWD</div>
+        <div class="sr-bpm">120</div>
+        <div class="sr-cell" style="left:52px;top:208px"><div class="sr-val" id="rv0">4</div><div class="sr-name" id="rn0">PULS</div></div>
+        <div class="sr-cell" style="left:362px;top:208px"><div class="sr-val" id="rv1">16</div><div class="sr-name" id="rn1">STEP</div></div>
+        <div class="sr-cell" style="left:720px;top:208px"><div class="sr-val" id="rv2">100</div><div class="sr-name" id="rn2">PROB</div></div>
+        <div class="sr-cell" style="left:1080px;top:208px"><div class="sr-val" id="rv3">FWD</div><div class="sr-name" id="rn3">MODE</div></div>
+        <div class="sr-cell" style="left:52px;top:496px"><div class="sr-val" id="rv4">100</div><div class="sr-name" id="rn4">VEL</div></div>
+        <div class="sr-cell" style="left:362px;top:496px"><div class="sr-val" id="rv5">0</div><div class="sr-name" id="rn5">SWNG</div></div>
+        <div class="sr-cell" style="left:720px;top:496px"><div class="sr-val" id="rv6">1/16</div><div class="sr-name" id="rn6">RESL</div></div>
+        <div class="sr-cell" style="left:1080px;top:496px"><div class="sr-val" id="rv7">0</div><div class="sr-name" id="rn7">ROTA</div></div>
+        <svg width="1440" height="920" viewBox="0 0 1440 920" fill="none"
+             style="position:absolute;top:0;left:0;pointer-events:none">
+          <rect x="52" y="756" width="280" height="120" rx="4" stroke="#FFFFFF" stroke-width="4"/>
+          <g id="r-step-g"></g>
+        </svg>
+        <div class="sr-trk" style="color:#FFFFFF">TRK1</div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th>ELEMENT</th><th>DESCRIPTION</th></tr>
+      <tr><td>HEADER</td><td>ACTIVE PAGE (A–D), PLAY MODE, AND BPM. ALWAYS VISIBLE.</td></tr>
+      <tr><td>PARAM GRID</td><td>8 PARAMETERS FOR THE ACTIVE TRACK ON THE CURRENT PAGE. VALUES UPDATE IN REAL TIME.</td></tr>
+      <tr><td>STEP ROW</td><td>BOTTOM — STEP PATTERN. LIVE WHEN SEQUENCER IS RUNNING.</td></tr>
+      <tr><td>TRK BOX</td><td>BOTTOM LEFT — ACTIVE TRACK NUMBER, OUTLINED IN ITS COLOUR.</td></tr>
+    </table>
+
+    <!-- Step state legend -->
+    <p class="lead" style="margin-top:32px;margin-bottom:16px">STEP STATES — WHAT EACH COLOUR MEANS:</p>
+    <div style="display:flex;flex-wrap:wrap;gap:24px;margin-bottom:48px;align-items:flex-start">
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+        <svg width="48" height="28"><rect x="0" y="0" width="48" height="28" rx="3" fill="#3A4A53"/></svg>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.06em">INACTIVE</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+        <svg width="48" height="28"><rect x="0" y="0" width="48" height="28" rx="3" fill="#FFFFFF"/></svg>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.06em">ACTIVE</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+        <svg width="48" height="28"><rect x="0" y="0" width="48" height="28" rx="3" fill="#FF8C00"/></svg>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.06em">PLAYHEAD</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+        <svg width="48" height="28"><rect x="0" y="0" width="48" height="28" rx="3" fill="#8C9AA3"/></svg>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.06em">PLAYHEAD<br>ON REST</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+        <svg width="48" height="28"><rect x="0" y="0" width="48" height="28" rx="3" fill="#00CCCC"/></svg>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.06em">P-LOCK</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+        <svg width="48" height="28"><rect x="0" y="0" width="48" height="28" rx="3" fill="#1A4A54"/></svg>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.06em">P-LOCK<br>INACTIVE</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+        <svg width="48" height="28"><rect x="0" y="0" width="48" height="28" rx="3" fill="#FF4466"/></svg>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.06em">REST<br>(REC)</span>
+      </div>
+    </div>
+    <div class="callout">
+      PATTERNS LONGER THAN 32 STEPS SWITCH TO A DOUBLE-ROW DISPLAY. UP TO 64 STEPS PER TRACK.
+    </div>
+  </section>
+
+  <!-- ══ TRACKS ══ -->
+  <section class="section" id="tracks">
+    <div class="section-tag">OVERVIEW</div>
+    <h2>TRACKS</h2>
+    <p class="lead">8 INDEPENDENT TRACKS. EACH HAS ITS OWN EUCLIDEAN PATTERN, MIDI CHANNEL, SCALE, AND FULL PARAMETER SET.</p>
+    <div class="callout">
+      <strong>EUCLIDEAN PATTERNS</strong> — PULSES ARE DISTRIBUTED AS EVENLY AS POSSIBLE ACROSS STEPS.
+      3 PULSES IN 8 STEPS = SON CLAVE. 5 IN 8 = QUINTILLO.
+    </div>
+    <table>
+      <tr><th>PROPERTY</th><th>RANGE</th><th>DESCRIPTION</th></tr>
+      <tr><td>STEPS</td><td>1–64</td><td>TOTAL PATTERN LENGTH.</td></tr>
+      <tr><td>PULSES</td><td>0–STEPS</td><td>NUMBER OF ACTIVE (TRIGGERED) STEPS.</td></tr>
+      <tr><td>CHANNEL</td><td>1–16</td><td>MIDI CHANNEL THIS TRACK OUTPUTS ON.</td></tr>
+      <tr><td>MUTE</td><td>ON/OFF</td><td>MUTES MIDI OUTPUT. PATTERN STILL ADVANCES.</td></tr>
+    </table>
+  </section>
+
+  <!-- ══ PAGE A: SEQ ══ -->
+  <section class="section" id="page-seq">
+    <div class="section-tag">KNOB PAGE A</div>
+    <h2>SEQ PAGE</h2>
+    <p class="lead">RHYTHMIC STRUCTURE OF THE ACTIVE TRACK. DEFAULT PAGE ON STARTUP.</p>
+
+    <div class="seq-render-wrap">
+      <div class="seq-render">
+        <div class="sr-page">A·SEQ</div>
+        <div class="sr-mode">FWD</div>
+        <div class="sr-bpm">120</div>
+        <div class="sr-cell" style="left:52px;top:208px"><div class="sr-val" id="rAv0">4</div><div class="sr-name" id="rAn0">PULS</div></div>
+        <div class="sr-cell" style="left:362px;top:208px"><div class="sr-val" id="rAv1">16</div><div class="sr-name" id="rAn1">STEP</div></div>
+        <div class="sr-cell" style="left:720px;top:208px"><div class="sr-val" id="rAv2">100</div><div class="sr-name" id="rAn2">PROB</div></div>
+        <div class="sr-cell" style="left:1080px;top:208px"><div class="sr-val" id="rAv3">FWD</div><div class="sr-name" id="rAn3">MODE</div></div>
+        <div class="sr-cell" style="left:52px;top:496px"><div class="sr-val" id="rAv4">100</div><div class="sr-name" id="rAn4">VEL</div></div>
+        <div class="sr-cell" style="left:362px;top:496px"><div class="sr-val" id="rAv5">0</div><div class="sr-name" id="rAn5">SWNG</div></div>
+        <div class="sr-cell" style="left:720px;top:496px"><div class="sr-val" id="rAv6">1/16</div><div class="sr-name" id="rAn6">RESL</div></div>
+        <div class="sr-cell" style="left:1080px;top:496px"><div class="sr-val" id="rAv7">0</div><div class="sr-name" id="rAn7">ROTA</div></div>
+        <svg width="1440" height="920" viewBox="0 0 1440 920" fill="none"
+             style="position:absolute;top:0;left:0;pointer-events:none">
+          <rect x="52" y="756" width="280" height="120" rx="4" stroke="#FFFFFF" stroke-width="4"/>
+          <g id="rA-step-g"></g>
+        </svg>
+        <div class="sr-trk" style="color:#FFFFFF">TRK1</div>
+      </div>
+    </div>
+
+    <div class="param-list">
+      <div class="param"><div class="param-num">1</div><div class="param-name">PULS</div>
+        <div class="param-desc">NUMBER OF ACTIVE STEPS. INCREASING PULSES MAKES THE RHYTHM DENSER. 0 = SILENCE. MAX = STEP COUNT.</div></div>
+      <div class="param"><div class="param-num">2</div><div class="param-name">STEP</div>
+        <div class="param-desc">TOTAL PATTERN LENGTH. DIFFERENT LENGTHS PER TRACK CREATE POLYRHYTHMS. RANGE 1–64.</div></div>
+      <div class="param"><div class="param-num">3</div><div class="param-name">PROB</div>
+        <div class="param-desc">TRIGGER PROBABILITY PER STEP. 100% = EVERY STEP FIRES. LOWER VALUES INTRODUCE RANDOM SILENCES — THE CORE OF THE GENERATIVE ENGINE.</div></div>
+      <div class="param"><div class="param-num">4</div><div class="param-name">MODE</div>
+        <div class="param-desc">PLAYBACK DIRECTION. SEE <a href="#play-modes">PLAY MODES</a> FOR ALL OPTIONS.</div></div>
+      <div class="param"><div class="param-num">5</div><div class="param-name">VEL</div>
+        <div class="param-desc">BASE MIDI VELOCITY FOR ALL NOTES. 0–127. OVERRIDEABLE PER STEP WITH P-LOCKS.</div></div>
+      <div class="param"><div class="param-num">6</div><div class="param-name">SWNG</div>
+        <div class="param-desc">SWING AMOUNT. DELAYS EVERY SECOND STEP TO CREATE GROOVE. APPLIED TO THE ACTIVE TRACK ONLY.</div></div>
+      <div class="param"><div class="param-num">7</div><div class="param-name">RESL</div>
+        <div class="param-desc">STEP RESOLUTION MULTIPLIER. CHANGES HOW MANY CLOCK TICKS EQUAL ONE STEP (1/8, 1/16, 1/32…).</div></div>
+      <div class="param"><div class="param-num">8</div><div class="param-name">ROTA</div>
+        <div class="param-desc">ROTATES THE PATTERN AND ALL P-LOCKS TOGETHER. SHIFTS THE RHYTHM IN TIME WITHOUT ALTERING ITS STRUCTURE.</div></div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE B: NOTE ══ -->
+  <section class="section" id="page-note">
+    <div class="section-tag">KNOB PAGE B</div>
+    <h2>NOTE PAGE</h2>
+    <p class="lead">MELODIC AND HARMONIC CONTENT. KEYBOARD INPUT, SCALE QUANTIZATION, AND AUTOMATIC HARMONIES.</p>
+
+    <!-- LIVE RENDER: B·NOTE page -->
+    <div class="seq-render-wrap">
+      <div class="seq-render">
+        <div class="sr-page">B·NOTE</div>
+        <div class="sr-mode">FWD</div>
+        <div class="sr-bpm">120</div>
+        <div class="sr-cell" style="left:52px;top:208px"><div class="sr-val" id="rBv0">C3</div><div class="sr-name" id="rBn0">NOTE</div></div>
+        <div class="sr-cell" style="left:362px;top:208px"><div class="sr-val" id="rBv1">MIN</div><div class="sr-name" id="rBn1">SCAL</div></div>
+        <div class="sr-cell" style="left:720px;top:208px"><div class="sr-val" id="rBv2">0</div><div class="sr-name" id="rBn2">OCT</div></div>
+        <div class="sr-cell" style="left:1080px;top:208px"><div class="sr-val" id="rBv3">50%</div><div class="sr-name" id="rBn3">DENS</div></div>
+        <div class="sr-cell" style="left:52px;top:496px"><div class="sr-val" id="rBv4">50%</div><div class="sr-name" id="rBn4">SPRD</div></div>
+        <div class="sr-cell" style="left:362px;top:496px"><div class="sr-val" id="rBv5">OFF</div><div class="sr-name" id="rBn5">HARM</div></div>
+        <div class="sr-cell" style="left:720px;top:496px"><div class="sr-val" id="rBv6">0°</div><div class="sr-name" id="rBn6">INTV</div></div>
+        <div class="sr-cell" style="left:1080px;top:496px"><div class="sr-val" id="rBv7">4st</div><div class="sr-name" id="rBn7">NLEN</div></div>
+        <svg width="1440" height="920" viewBox="0 0 1440 920" fill="none"
+             style="position:absolute;top:0;left:0;pointer-events:none">
+          <rect x="52" y="756" width="280" height="120" rx="4" stroke="#FFFFFF" stroke-width="4"/>
+          <g id="rB-step-g"></g>
+        </svg>
+        <div class="sr-trk" style="color:#FFFFFF">TRK1</div>
+      </div>
+    </div>
+
+    <div class="param-list">
+      <div class="param"><div class="param-num">1</div><div class="param-name">NOTE</div>
+        <div class="param-desc">ROOT NOTE. ALL GENERATED PITCHES ARE RELATIVE TO THIS VALUE. RANGE C0–C8.</div></div>
+      <div class="param"><div class="param-num">2</div><div class="param-name">SCAL</div>
+        <div class="param-desc">SCALE USED TO CONSTRAIN PITCHES. ALL NOTES QUANTIZED TO THE SELECTED SCALE. SEE <a href="#scales">SCALES</a>.</div></div>
+      <div class="param"><div class="param-num">3</div><div class="param-name">OCT</div>
+        <div class="param-desc">OCTAVE OFFSET. SHIFTS ALL NOTES UP OR DOWN BY FULL OCTAVES. RANGE -4 TO +4.</div></div>
+      <div class="param"><div class="param-num">4</div><div class="param-name">DENS</div>
+        <div class="param-desc">NOTE DENSITY. CONTROLS THE SPREAD OF RANDOMLY GENERATED PITCHES WITHIN THE SCALE.</div></div>
+      <div class="param"><div class="param-num">5</div><div class="param-name">SPRD</div>
+        <div class="param-desc">SPREAD. WIDENS THE PITCH RANGE FOR STOCHASTIC NOTE GENERATION.</div></div>
+      <div class="param"><div class="param-num">6</div><div class="param-name">HARM</div>
+        <div class="param-desc">HARMONY SOURCE. LOCKS THIS TRACK'S PITCHES TO FOLLOW ANOTHER TRACK'S ROOT AND SCALE. GENERATED AND KEYBOARD-RECORDED NOTES BOTH TRANSPOSE PROPORTIONALLY WHEN THE SOURCE CHANGES KEY. <strong>ORANGE = ACTIVE.</strong></div></div>
+      <div class="param"><div class="param-num">7</div><div class="param-name">INTV</div>
+        <div class="param-desc">HARMONY INTERVAL. OFFSETS THE HARMONIC RELATIONSHIP BY A NUMBER OF SCALE DEGREES.</div></div>
+      <div class="param"><div class="param-num">8</div><div class="param-name">NLEN</div>
+        <div class="param-desc">DEFAULT NOTE LENGTH IN STEPS. OVERRIDEABLE PER STEP VIA P-LOCKS OR STEP RECORD.</div></div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE C: FX ══ -->
+  <section class="section" id="page-fx">
+    <div class="section-tag">KNOB PAGE C</div>
+    <h2>FX PAGE</h2>
+    <p class="lead">ARTICULATION AND TIME-BASED EFFECTS. DELAY, RATCHETING, AND GATE SHAPING.</p>
+
+    <!-- LIVE RENDER: C·FX page -->
+    <div class="seq-render-wrap">
+      <div class="seq-render">
+        <div class="sr-page">C·FX</div>
+        <div class="sr-mode">FWD</div>
+        <div class="sr-bpm">120</div>
+        <div class="sr-cell" style="left:52px;top:208px"><div class="sr-val" id="rCv0">OFF</div><div class="sr-name" id="rCn0">DLY</div></div>
+        <div class="sr-cell" style="left:362px;top:208px"><div class="sr-val" id="rCv1">1</div><div class="sr-name" id="rCn1">DTIM</div></div>
+        <div class="sr-cell" style="left:720px;top:208px"><div class="sr-val" id="rCv2">50%</div><div class="sr-name" id="rCn2">FDBK</div></div>
+        <div class="sr-cell" style="left:1080px;top:208px"><div class="sr-val" id="rCv3">0.0</div><div class="sr-name" id="rCn3">RDEC</div></div>
+        <div class="sr-cell" style="left:52px;top:496px"><div class="sr-val" id="rCv4">100%</div><div class="sr-name" id="rCn4">RSPD</div></div>
+        <div class="sr-cell" style="left:362px;top:496px"><div class="sr-val" id="rCv5">1x</div><div class="sr-name" id="rCn5">RTCH</div></div>
+        <div class="sr-cell" style="left:720px;top:496px"><div class="sr-val" id="rCv6">100%</div><div class="sr-name" id="rCn6">GATE</div></div>
+        <div class="sr-cell" style="left:1080px;top:496px"><div class="sr-val" id="rCv7">—</div><div class="sr-name" id="rCn7">CC</div></div>
+        <svg width="1440" height="920" viewBox="0 0 1440 920" fill="none"
+             style="position:absolute;top:0;left:0;pointer-events:none">
+          <rect x="52" y="756" width="280" height="120" rx="4" stroke="#FFFFFF" stroke-width="4"/>
+          <g id="rC-step-g"></g>
+        </svg>
+        <div class="sr-trk" style="color:#FFFFFF">TRK1</div>
+      </div>
+    </div>
+
+    <div class="param-list">
+      <div class="param"><div class="param-num">1</div><div class="param-name">DLY</div>
+        <div class="param-desc">DELAY ON/OFF. ENABLES THE INTERNAL MIDI DELAY FOR THIS TRACK. <strong>ORANGE = ACTIVE.</strong></div></div>
+      <div class="param"><div class="param-num">2</div><div class="param-name">DTIM</div>
+        <div class="param-desc">DELAY TIME IN STEPS.</div></div>
+      <div class="param"><div class="param-num">3</div><div class="param-name">FDBK</div>
+        <div class="param-desc">DELAY FEEDBACK. HOW MANY TIMES THE DELAYED NOTE REPEATS.</div></div>
+      <div class="param"><div class="param-num">4</div><div class="param-name">RDEC</div>
+        <div class="param-desc">RATCHET DECAY. VELOCITY ENVELOPE ACROSS RATCHET REPETITIONS.</div></div>
+      <div class="param"><div class="param-num">5</div><div class="param-name">RSPD</div>
+        <div class="param-desc">RATCHET SPREAD. DISTANCE BETWEEN HITS AS A PERCENTAGE OF THE STEP DURATION. <strong>0% = ALL HITS AT THE START (FLAM).</strong> <strong>100% = EVENLY DISTRIBUTED ACROSS THE STEP.</strong> <strong>&gt;100% = HITS SPILL INTO THE NEXT STEP</strong> (MAX 200%). WORKS AT ANY BPM AND RESOLUTION.</div></div>
+      <div class="param"><div class="param-num">6</div><div class="param-name">RTCH</div>
+        <div class="param-desc">RATCHET COUNT. NUMBER OF NOTE REPETITIONS PER STEP. 1 = OFF, 2–16 = RATCHET. COMBINE WITH RSPD FOR FLAM, ROLL, OR SYNCOPATED EFFECTS.</div></div>
+      <div class="param"><div class="param-num">7</div><div class="param-name">GATE</div>
+        <div class="param-desc">GATE LENGTH AS PERCENTAGE OF STEP DURATION. 100% = LEGATO. 10% = STACCATO.</div></div>
+      <div class="param"><div class="param-num">8</div><div class="param-name">CC</div>
+        <div class="param-desc">CONTINUOUS CONTROLLER LANE. SENDS A CC VALUE ALONGSIDE EACH NOTE. NUMBER DEFINED IN MAPPING.</div></div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE D: CONF ══ -->
+  <section class="section" id="page-conf">
+    <div class="section-tag">KNOB PAGE D</div>
+    <h2>CONF PAGE</h2>
+    <p class="lead">ROUTING, PROGRAM CHANGE, AND BANK MANAGEMENT FOR THE ACTIVE TRACK.</p>
+
+    <!-- LIVE RENDER: D·CONF page -->
+    <div class="seq-render-wrap">
+      <div class="seq-render">
+        <div class="sr-page">D·CONF</div>
+        <div class="sr-mode">FWD</div>
+        <div class="sr-bpm">120</div>
+        <div class="sr-cell" style="left:52px;top:208px"><div class="sr-val" id="rDv0">0</div><div class="sr-name" id="rDn0">PROG</div></div>
+        <div class="sr-cell" style="left:362px;top:208px"><div class="sr-val" id="rDv1">1</div><div class="sr-name" id="rDn1">BANK</div></div>
+        <div class="sr-cell" style="left:720px;top:208px"><div class="sr-val" id="rDv2">1</div><div class="sr-name" id="rDn2">PTBK</div></div>
+        <div class="sr-cell" style="left:1080px;top:208px"><div class="sr-val" id="rDv3">—</div><div class="sr-name" id="rDn3">PTRN</div></div>
+        <div class="sr-cell" style="left:52px;top:496px"><div class="sr-val" id="rDv4">CH1</div><div class="sr-name" id="rDn4">CHAN</div></div>
+        <div class="sr-cell" style="left:362px;top:496px"><div class="sr-val" id="rDv5">OFF</div><div class="sr-name" id="rDn5">CLK</div></div>
+        <div class="sr-cell" style="left:720px;top:496px"><div class="sr-val" id="rDv6">OUT1</div><div class="sr-name" id="rDn6">PORT</div></div>
+        <div class="sr-cell" style="left:1080px;top:496px"><div class="sr-val" id="rDv7">OFF</div><div class="sr-name" id="rDn7">DAW</div></div>
+        <svg width="1440" height="920" viewBox="0 0 1440 920" fill="none"
+             style="position:absolute;top:0;left:0;pointer-events:none">
+          <rect x="52" y="756" width="280" height="120" rx="4" stroke="#FFFFFF" stroke-width="4"/>
+          <g id="rD-step-g"></g>
+        </svg>
+        <div class="sr-trk" style="color:#FFFFFF">TRK1</div>
+      </div>
+    </div>
+
+    <div class="param-list">
+      <div class="param"><div class="param-num">1</div><div class="param-name">PROG</div>
+        <div class="param-desc">PROGRAM CHANGE NUMBER SENT ON TRACK START. USEFUL FOR SWITCHING PATCHES.</div></div>
+      <div class="param"><div class="param-num">2</div><div class="param-name">BANK</div>
+        <div class="param-desc">ACTIVE PATTERN BANK. 16 BANKS, EACH WITH UP TO 8 SLOTS.</div></div>
+      <div class="param"><div class="param-num">3</div><div class="param-name">PTBK</div>
+        <div class="param-desc">PATTERN BANK TARGET FOR SAVE / LOAD OPERATIONS.</div></div>
+      <div class="param"><div class="param-num">4</div><div class="param-name">PTRN</div>
+        <div class="param-desc">PATTERN SLOT WITHIN THE ACTIVE BANK.</div></div>
+      <div class="param"><div class="param-num">5</div><div class="param-name">CHAN</div>
+        <div class="param-desc">MIDI CHANNEL FOR THIS TRACK. 1–16.</div></div>
+      <div class="param"><div class="param-num">6</div><div class="param-name">CLK</div>
+        <div class="param-desc">CLOCK SOURCE — INTERNAL OR EXTERNAL SYNC VIA MIDI CLOCK INPUT.</div></div>
+      <div class="param"><div class="param-num">7</div><div class="param-name">PORT</div>
+        <div class="param-desc">MIDI OUTPUT PORT FOR THIS TRACK.</div></div>
+      <div class="param"><div class="param-num">8</div><div class="param-name">DAW</div>
+        <div class="param-desc">DAW SYNC MODE. SENDS MIDI CLOCK TO THE IAC DRIVER BUS.</div></div>
+    </div>
+  </section>
+
+  <!-- ══ STEP RECORD ══ -->
+  <section class="section" id="step-record">
+    <div class="section-tag">WORKFLOW</div>
+    <h2>STEP RECORD</h2>
+    <p class="lead">PROGRAM NOTES AND PARAMETER LOCKS USING A MIDI KEYBOARD, ONE STEP AT A TIME. SEQUENCER MUST BE STOPPED.</p>
+    <div class="callout">
+      EACH NOTE PLAYED RECORDS PITCH AND NOTE LENGTH AT THE CURRENT STEP,
+      THEN ADVANCES THE CURSOR. HOLD A KEY LONGER TO RECORD A LONGER NOTE.
+    </div>
+    <table>
+      <tr><th>ACTION</th><th>RESULT</th></tr>
+      <tr><td>PLAY NOTE</td><td>RECORDS PITCH + LENGTH AT CURRENT STEP. CURSOR ADVANCES.</td></tr>
+      <tr><td><kbd>SHIFT</kbd> + NOTE</td><td>SKIPS CURRENT STEP AS REST. STEP FLASHES RED. CURSOR ADVANCES.</td></tr>
+      <tr><td>MOVE KNOB</td><td>RECORDS A P-LOCK (PER-STEP PARAMETER OVERRIDE).</td></tr>
+      <tr><td>CC LANE INPUT</td><td>RECORDS CC VALUES FROM CONNECTED SYNTHS INTO THE ACTIVE LANE.</td></tr>
+    </table>
+    <div class="callout">
+      <strong>P-LOCKS</strong> — ANY PARAMETER CAN BE LOCKED TO A SPECIFIC VALUE FOR A SINGLE STEP.
+      ROTATION (ROTA) MOVES P-LOCKS TOGETHER WITH THE PATTERN.
+    </div>
+    <div class="callout">
+      <strong>RECORDING CURSOR</strong> — WHEN THE SEQUENCER IS STOPPED, THE HIGHLIGHTED STEP IN THE GRID SHOWS EXACTLY WHERE THE NEXT NOTE WILL BE RECORDED. THE CURSOR ADVANCES AFTER EACH NOTE AND IS VISIBLE IN REAL TIME.
+    </div>
+  </section>
+
+  <!-- ══ PATTERNS ══ -->
+  <section class="section" id="patterns">
+    <div class="section-tag">WORKFLOW</div>
+    <h2>PATTERNS & BANKS</h2>
+    <p class="lead">8 BANKS, EACH HOLDING UP TO 64 PATTERN SLOTS (8×8 GRID). USE BANKS TO ORGANISE SONG SECTIONS OR VARIATIONS.</p>
+    <table>
+      <tr><th>OPERATION</th><th>HOW</th></tr>
+      <tr><td>OPEN BANK VIEW</td><td><kbd>0</kbd> OR <kbd>B</kbd> — OPENS THE 8×8 SLOT GRID.</td></tr>
+      <tr><td>SAVE PATTERN</td><td>NAVIGATE TO TARGET SLOT → <kbd>Cmd+S</kbd>.</td></tr>
+      <tr><td>LOAD PATTERN</td><td>NAVIGATE TO SLOT → <kbd>Enter</kbd>. SWITCHES IMMEDIATELY.</td></tr>
+      <tr><td>DELETE SLOT</td><td><kbd>Delete</kbd> OR <kbd>Backspace</kbd> ON SELECTED SLOT.</td></tr>
+      <tr><td>SWITCH BANK</td><td><kbd>Shift+←</kbd> / <kbd>Shift+→</kbd> IN BANK VIEW, OR SBANK/LBANK ON CONTROLLER.</td></tr>
+      <tr><td>COPY PATTERN</td><td>HOLD COPY ON LAUNCHPAD → TAP SOURCE PAD → TAP DESTINATION PAD.</td></tr>
+      <tr><td>MORPH A↔B (hardware)</td><td>HOLD COPY ON LAUNCHPAD + TAP TARGET SLOT → SET B. THEN MOVE FADER 9 (CC 9) TO BLEND. TAP SAME SLOT AGAIN WITH COPY TO CANCEL.</td></tr>
+      <tr><td>MORPH A↔B (keyboard)</td><td>IN BANK VIEW, NAVIGATE TO TARGET SLOT → <kbd>C</kbd> TO SET B. THEN <kbd>Shift+↑</kbd> / <kbd>Shift+↓</kbd> TO BLEND +5% / −5%. PRESS <kbd>C</kbd> ON THE SAME SLOT AGAIN TO CANCEL.</td></tr>
+    </table>
+    <div class="callout">SLOTS SHOW THEIR STATUS AT A GLANCE: <strong>WHITE</strong> = HAS DATA · <strong>ORANGE</strong> = ACTIVE/LOADED · <strong>GREEN BADGE</strong> = IN CHAIN (WITH POSITION NUMBER).</div>
+
+    <h3>PATTERN MORPHING</h3>
+    <p>MORPH BLENDS ALL 8 TRACKS CONTINUOUSLY BETWEEN THE CURRENT LIVE STATE (A) AND A SAVED SLOT (B). THE BLEND IS PROBABILISTIC — AT 50% EACH STEP HAS EQUAL CHANCE OF FIRING FROM EITHER PATTERN.</p>
+    <table>
+      <tr><th>STEP</th><th>HOW</th></tr>
+      <tr><td>1. SET PATTERN B</td><td><strong>Keyboard:</strong> OPEN BANK VIEW (<kbd>0</kbd>), NAVIGATE TO SLOT, PRESS <kbd>C</kbd>. <strong>Hardware:</strong> HOLD COPY ON LAUNCHPAD + TAP PAD. THE CURRENT LIVE STATE IS FROZEN AS A, THE SLOT BECOMES B. THE DISPLAY SHOWS <strong>MORPH B → B1.3</strong> (BANK.SLOT).</td></tr>
+      <tr><td>2. BLEND A→B</td><td><strong>Keyboard:</strong> <kbd>Shift+↑</kbd> / <kbd>Shift+↓</kbd> ADJUSTS BY +5% / −5%. WHEN MORPH B IS ACTIVE THESE KEYS CONTROL BLEND INSTEAD OF STOCHASTIC AMOUNT. <strong>Hardware:</strong> FADER 9 (CC 9) ON NANOKONTROL. 0% = ONLY A · 100% = ONLY B. THE BLEND PERCENTAGE IS SHOWN ON SCREEN.</td></tr>
+      <tr><td>3. CANCEL MORPH</td><td><strong>Keyboard:</strong> <kbd>C</kbd> ON THE SAME SLOT AGAIN IN BANK VIEW. <strong>Hardware:</strong> HOLD COPY + TAP SAME PAD.</td></tr>
+    </table>
+    <div class="callout">MORPH BLENDS PATTERN PROBABILITY, NOTE, VELOCITY, GATE, AND ALL P-LOCK PARAMETERS INTERPOLATED ACROSS ALL 8 TRACKS SIMULTANEOUSLY. WHILE MORPH B IS ACTIVE, <kbd>Shift+↑</kbd> / <kbd>Shift+↓</kbd> CONTROL THE BLEND INSTEAD OF STOCHASTIC AMOUNT — THE SAME KEYS, CONTEXT-AWARE.</div>
+  </section>
+
+  <!-- ══ PLAY MODES ══ -->
+  <section class="section" id="play-modes">
+    <div class="section-tag">WORKFLOW</div>
+    <h2>PLAY MODES</h2>
+    <p class="lead">EACH TRACK CAN ADVANCE THROUGH ITS PATTERN IN A DIFFERENT WAY. MIXING MODES CREATES COMPLEX EVOLVING TEXTURES.</p>
+    <div class="param-list">
+      <div class="param"><div class="param-num">1</div><div class="param-name">FORWARD</div><div class="param-desc">STANDARD LEFT-TO-RIGHT PLAYBACK. THE DEFAULT.</div></div>
+      <div class="param"><div class="param-num">2</div><div class="param-name">REVERSE</div><div class="param-desc">PLAYS THE PATTERN BACKWARDS FROM LAST STEP TO FIRST.</div></div>
+      <div class="param"><div class="param-num">3</div><div class="param-name">BOUNCE</div><div class="param-desc">ALTERNATES BETWEEN FORWARD AND REVERSE. BOUNCES AT EACH END.</div></div>
+      <div class="param"><div class="param-num">4</div><div class="param-name">RANDOM</div><div class="param-desc">EACH TICK PICKS A RANDOM STEP. FULLY STOCHASTIC PLAYBACK.</div></div>
+      <div class="param"><div class="param-num">5</div><div class="param-name">SNAKE</div><div class="param-desc">FORWARD THEN REVERSE IN A SINGLE CYCLE, SHARING END STEPS.</div></div>
+      <div class="param"><div class="param-num">6</div><div class="param-name">DRUNK</div><div class="param-desc">RANDOM WALK. EACH TICK MOVES +1 OR -1. SLOWLY DRIFTING PATTERNS.</div></div>
+    </div>
+  </section>
+
+  <!-- ══ SCALES ══ -->
+  <section class="section" id="scales">
+    <div class="section-tag">WORKFLOW</div>
+    <h2>SCALES</h2>
+    <p class="lead">ALL NOTES QUANTIZED TO THE ACTIVE SCALE. CHANGING SCALE TRANSPOSES THE TRACK IN REAL TIME.</p>
+    <table>
+      <tr><th>NAME</th><th>INTERVALS</th><th>CHARACTER</th></tr>
+      <tr><td>MINOR</td><td>W H W W H W W</td><td>DARK, EXPRESSIVE. DEFAULT.</td></tr>
+      <tr><td>MAJOR</td><td>W W H W W W H</td><td>BRIGHT, RESOLVED.</td></tr>
+      <tr><td>DORIAN</td><td>W H W W W H W</td><td>MODAL, JAZZY.</td></tr>
+      <tr><td>PENTA</td><td>W W WH W WH</td><td>PENTATONIC. OPEN, NO HALF-STEPS.</td></tr>
+      <tr><td>FRIGIA</td><td>H W W W H W W</td><td>PHRYGIAN. TENSE, FLAMENCO CHARACTER.</td></tr>
+    </table>
+  </section>
+
+  <!-- ══ CONF VIEW ══ -->
+  <section class="section" id="conf-view">
+    <div class="section-tag">SETTINGS</div>
+    <h2>CONF VIEW</h2>
+    <p class="lead">FULL-SCREEN OVERLAY WITH THREE TABS. OPEN WITH <kbd>CTRL+M</kbd> OR <kbd>CMD+,</kbd>. CLOSE WITH <kbd>ESC</kbd>.</p>
+
+    <!-- LIVE RENDER: CONF settings tab -->
+    <div class="seq-render-wrap">
+      <div class="seq-render">
+        <div class="sr-conf-hdr">CONF</div>
+        <div class="sr-cf-row" style="left:24px;width:1392px;top:155px"><span class="sr-cf-name">MIDI INT 1</span><span class="sr-cf-val orange">MIDI4x4 Midi Out 1 ▼</span></div>
+        <div class="sr-cf-row" style="left:24px;width:1392px;top:275px"><span class="sr-cf-name">MIDI INT 2</span><span class="sr-cf-val dim">— ▼</span></div>
+        <div class="sr-cf-row" style="left:24px;width:1392px;top:395px"><span class="sr-cf-name">LAUNCHPAD</span><span class="sr-cf-val orange">Launchpad ▼</span></div>
+        <div class="sr-cf-row" style="left:24px;width:1392px;top:515px"><span class="sr-cf-name">MIDI CTRL 1</span><span class="sr-cf-val orange">nanoKONTROL SLIDER/KNOB ▼</span></div>
+        <div class="sr-cf-row" style="left:24px;width:1392px;top:635px"><span class="sr-cf-name">MIDI CTRL 2</span><span class="sr-cf-val dim">— ▼</span></div>
+        <div class="sr-tab on"  style="left:48px">STG</div>
+        <div class="sr-tab off" style="left:528px">MAP</div>
+        <div class="sr-tab off" style="left:1008px">MOV</div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th>TAB</th><th>CONTENT</th></tr>
+      <tr><td>STG</td><td>MIDI PORT ASSIGNMENT. CLICK ANY ROW TO CYCLE THROUGH AVAILABLE PORTS. ORANGE = ACTIVE CONNECTION.</td></tr>
+      <tr><td>MAP</td><td>CC ASSIGNMENTS FOR ALL CONTROLS ACROSS ALL 4 PAGES. CLICK A ROW TO ENTER LEARN MODE.</td></tr>
+      <tr><td>MOV</td><td>SAVE AND LOAD CC MAPPINGS AS JSON FILES.</td></tr>
+    </table>
+  </section>
+
+  <!-- ══ CC MAPPING ══ -->
+  <section class="section" id="mapping">
+    <div class="section-tag">SETTINGS</div>
+    <h2>CC MAPPING</h2>
+    <p class="lead">EVERY CONTROL CAN BE ASSIGNED TO ANY MIDI CC. TWO PRESETS INCLUDED. CUSTOM MAPPINGS CAN BE SAVED AND SHARED.</p>
+
+    <!-- LIVE RENDER: CONF mapping tab -->
+    <div class="seq-render-wrap">
+      <div class="seq-render">
+        <div class="sr-conf-hdr">CONF</div>
+        <div style="position:absolute;right:48px;top:31px;display:flex;align-items:center;gap:32px;font-size:96px;line-height:108px;color:#A1A3A5">
+          <span style="color:#3A4A53;padding:0 16px">◄</span>
+          <span>1/4</span>
+          <span style="padding:0 16px">►</span>
+        </div>
+        <div class="sr-cf-row" style="left:48px;width:628px;top:208px"><span class="sr-cf-name">PULS</span><span class="sr-cf-val">CC11:1</span></div>
+        <div class="sr-cf-row" style="left:48px;width:628px;top:346px"><span class="sr-cf-name">STEP</span><span class="sr-cf-val">CC12:1</span></div>
+        <div class="sr-cf-row" style="left:48px;width:628px;top:484px"><span class="sr-cf-name">PROB</span><span class="sr-cf-val">CC13:1</span></div>
+        <div class="sr-cf-row" style="left:48px;width:628px;top:622px"><span class="sr-cf-name">MODE</span><span class="sr-cf-val">CC14:1</span></div>
+        <div class="sr-cf-row" style="left:764px;width:628px;top:208px"><span class="sr-cf-name">VEL</span> <span class="sr-cf-val">CC15:1</span></div>
+        <div class="sr-cf-row" style="left:764px;width:628px;top:346px"><span class="sr-cf-name">SWNG</span><span class="sr-cf-val">CC16:1</span></div>
+        <div class="sr-cf-row" style="left:764px;width:628px;top:484px"><span class="sr-cf-name">RESL</span><span class="sr-cf-val">CC17:1</span></div>
+        <div class="sr-cf-row" style="left:764px;width:628px;top:622px"><span class="sr-cf-name">ROTA</span><span class="sr-cf-val">CC18:1</span></div>
+        <div class="sr-tab off" style="left:48px">STG</div>
+        <div class="sr-tab on"  style="left:528px">MAP</div>
+        <div class="sr-tab off" style="left:1008px">MOV</div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th>PRESET</th><th>DEVICE</th><th>KNOBS</th></tr>
+      <tr><td>DEFAULT</td><td>KORG NANOKONTROL</td><td>CC 11–18 (KNOBS) · 1–8 (FADERS) · 21–28 (BTN S) · 31–38 (BTN M)</td></tr>
+      <tr><td>LAUNCHKEY</td><td>NOVATION LAUNCHKEY MK4 49</td><td>CC 21–28 (8 KNOBS). NO FADERS OR BUTTONS.</td></tr>
+    </table>
+    <div class="callout">
+      <strong>LEARN MODE</strong> — CONF → MAPPING → CLICK ANY ROW → ROW PULSES ORANGE → MOVE PHYSICAL CONTROL → CC ASSIGNED.
+    </div>
+  </section>
+
+  <!-- ══ IMP/EXP ══ -->
+  <section class="section" id="impexp">
+    <div class="section-tag">SETTINGS</div>
+    <h2>IMP / EXP</h2>
+    <p class="lead">EXPORT YOUR CC MAPPING AS A HUMAN-READABLE JSON FILE. SHARE OR EDIT BY HAND.</p>
+    <div class="callout">
+      THE EXPORTED FILE LABELS EACH CC WITH ITS PARAMETER NAME AND PAGE.
+    </div>
+    <table>
+      <tr><th>ACTION</th><th>HOW</th></tr>
+      <tr><td>EXPORT</td><td>CONF VIEW → IMP/EXP TAB → EXPORT. SAVES mapping.json TO DOWNLOADS FOLDER.</td></tr>
+      <tr><td>IMPORT</td><td>CONF VIEW → IMP/EXP TAB → IMPORT. SELECT A mapping.json FILE. APPLIED IMMEDIATELY.</td></tr>
+      <tr><td>RESET</td><td>LOAD THE DEFAULT NANOKONTROL PRESET FROM THE SAME TAB.</td></tr>
+    </table>
+  </section>
+
+  <!-- ══ CHAIN & MIDI EXPORT ══ -->
+  <section class="section" id="chain-export">
+    <div class="section-tag">WORKFLOW</div>
+    <h2>CHAIN & MIDI EXPORT</h2>
+    <p class="lead">BUILD AN ORDERED SEQUENCE OF PATTERNS AND EXPORT IT AS A STANDARD MIDI FILE — ALL 8 TRACKS, WITH NOTES, CC LANES, PROGRAM CHANGES, PITCH BEND, AND RATCHET.</p>
+
+    <h3>BUILDING A CHAIN</h3>
+    <p>OPEN BANK VIEW (<kbd>0</kbd>), NAVIGATE TO A SLOT AND PRESS <kbd>Space</kbd> TO ADD IT TO THE CHAIN. THE SLOT SHOWS A GREEN BADGE WITH ITS POSITION NUMBER. REPEAT FOR EACH SECTION IN ORDER. A SLOT CAN APPEAR MULTIPLE TIMES.</p>
+    <table>
+      <tr><th>ACTION</th><th>RESULT</th></tr>
+      <tr><td><kbd>Space</kbd> ON FILLED SLOT</td><td>ADDS SLOT TO END OF CHAIN. IF ALREADY IN CHAIN, REMOVES LAST OCCURRENCE.</td></tr>
+      <tr><td><kbd>X</kbd></td><td>CLEARS THE ENTIRE CHAIN.</td></tr>
+      <tr><td><kbd>F</kbd> OVER TARGET SLOT</td><td>FLATTENS THE ENTIRE CHAIN INTO THAT SLOT — CONCATENATES ALL PATTERNS INTO ONE LONG PATTERN AND LOADS IT IMMEDIATELY. THE CHAIN IS THEN CLEARED. MAX 8 SLOTS.</td></tr>
+      <tr><td>GREEN BADGE ON SLOT</td><td>SHOWS POSITION(S) OF THAT SLOT IN THE CHAIN (E.G. "1", "3", "1,4").</td></tr>
+    </table>
+    <div class="callout">THE CHAIN ALSO DRIVES LIVE PLAYBACK — THE SEQUENCER ADVANCES TO THE NEXT SLOT AUTOMATICALLY WHEN THE CURRENT PATTERN COMPLETES.</div>
+    <div class="callout">FLATTEN SUPPORTS UP TO 8 SLOTS — 8×64 STEPS = 512-STEP PATTERN, NAVIGABLE VIA <kbd>Q</kbd>/<kbd>W</kbd> (STEP PAGE ±). THE CHAIN CAN BE LONGER THAN 8 SLOTS FOR LIVE PLAYBACK, BUT FLATTEN REQUIRES ≤ 8.</div>
+    <div class="callout">THE CHAIN IS SAVED WITH THE SESSION — IT SURVIVES APP RESTARTS.</div>
+
+    <h3>MIDI EXPORT</h3>
+    <p>WITH A CHAIN BUILT, PRESS <kbd>E</kbd>. DOWNLOADS A TYPE-1 MIDI FILE (8 TRACKS, 480 PPQ).</p>
+    <table>
+      <tr><th>WHAT IS EXPORTED</th><th>DETAIL</th></tr>
+      <tr><td>NOTES</td><td>ALL ACTIVE STEPS — FROM P-LOCKS, TONAL MELODY, OR ROOT NOTE.</td></tr>
+      <tr><td>NOTE LENGTH & GATE</td><td>PER-STEP LENGTHS PRESERVED EXACTLY.</td></tr>
+      <tr><td>RATCHET</td><td>MULTIPLE NOTE-ON/OFF EVENTS PER STEP WITH CORRECT SPREAD AND VELOCITY CURVE.</td></tr>
+      <tr><td>SWING</td><td>TIMING OFFSET APPLIED TO EVERY OTHER STEP.</td></tr>
+      <tr><td>CC LANES</td><td>ALL 8 CC LANES PER TRACK — VALUES FROM P-LOCKS WRITTEN AS CC EVENTS.</td></tr>
+      <tr><td>PROGRAM CHANGE</td><td>SENT AT THE START OF EACH SLOT IF ENABLED. P-LOCK PCS ALSO INCLUDED.</td></tr>
+      <tr><td>PITCH BEND & AFTERTOUCH</td><td>PER-STEP VALUES FROM STEP RECORD.</td></tr>
+      <tr><td>TEMPO</td><td>ONE TEMPO META EVENT PER SLOT — EACH SLOT CAN HAVE ITS OWN BPM.</td></tr>
+      <tr><td>MUTED TRACKS</td><td>EXCLUDED FROM MIDI OUTPUT.</td></tr>
+    </table>
+    <div class="callout">THE FILE IS COMPATIBLE WITH ANY DAW (ABLETON, LOGIC, BITWIG…). IMPORT IT AS MIDI CLIPS TO CONTINUE EDITING.</div>
+  </section>
+
+  <section class="section" id="shortcuts">
+    <div class="section-tag">REFERENCE</div>
+    <h2>KEYBOARD SHORTCUTS</h2>
+    <p class="lead">ALL SHORTCUTS WORK IN THE WEB UI. MIDI KEYBOARD MUST BE ENABLED (MIDI IN CONFIGURED IN CONF → SETTINGS).</p>
+
+    <h3>TRANSPORT</h3>
+    <table>
+      <tr><th>ACTION</th><th>KEY</th></tr>
+      <tr><td>PLAY / PAUSE</td><td>Space</td></tr>
+      <tr><td>RECORD ON/OFF</td><td>R</td></tr>
+      <tr><td>UNDO</td><td>Cmd+Z</td></tr>
+      <tr><td>REDO</td><td>Cmd+Shift+Z</td></tr>
+      <tr><td>BPM +1 / -1</td><td>Cmd+↑ / Cmd+↓</td></tr>
+      <tr><td>BPM +10 / -10</td><td>Cmd+Shift+↑ / Cmd+Shift+↓</td></tr>
+    </table>
+
+    <h3>TRACKS & PAGES</h3>
+    <table>
+      <tr><th>ACTION</th><th>KEY</th></tr>
+      <tr><td>SELECT TRACK 1–8</td><td>1 – 8</td></tr>
+      <tr><td>SELECT PARAM 1–8</td><td>Alt+1 – Alt+8</td></tr>
+      <tr><td>PREV / NEXT PARAM</td><td>← / →</td></tr>
+      <tr><td>PREV / NEXT PAGE</td><td>Cmd+← / Cmd+→</td></tr>
+      <tr><td>ADJUST PARAM VALUE</td><td>↑ / ↓</td></tr>
+      <tr><td>DUPLICATE PATTERN</td><td>Cmd+D</td></tr>
+      <tr><td>CLEAR TRACK (pattern + locks)</td><td>Cmd+Backspace</td></tr>
+    </table>
+
+    <h3>STEP GRID</h3>
+    <table>
+      <tr><th>ACTION</th><th>KEY</th></tr>
+      <tr><td>TOGGLE STEPS 1–8 (current page)</td><td>A S D F G H J K</td></tr>
+      <tr><td>STEP PAGE PREV / NEXT</td><td>Q / W</td></tr>
+      <tr><td>NAVIGATE STEPS</td><td>Tab / Shift+Tab</td></tr>
+    </table>
+
+    <h3>P-LOCKS (STEP FOCUS MODE)</h3>
+    <p class="lead">PRESS <strong>Enter</strong> TO ENTER STEP FOCUS MODE. THE SELECTED STEP IS HIGHLIGHTED IN THE GRID.</p>
+    <table>
+      <tr><th>ACTION</th><th>KEY</th></tr>
+      <tr><td>ENTER / EXIT STEP FOCUS</td><td>Enter</td></tr>
+      <tr><td>MOVE TO PREV / NEXT STEP</td><td>← / → (in step focus)</td></tr>
+      <tr><td>NAVIGATE STEPS</td><td>Tab / Shift+Tab</td></tr>
+      <tr><td>NUDGE P-LOCK VALUE ±1</td><td>↑ / ↓ (in step focus)</td></tr>
+      <tr><td>NUDGE P-LOCK VALUE ±5</td><td>Shift+↑ / Shift+↓ (in step focus)</td></tr>
+      <tr><td>CLEAR P-LOCKS ON STEP</td><td>Backspace (in step focus)</td></tr>
+      <tr><td>COPY STEP</td><td>Cmd+C (in step focus)</td></tr>
+      <tr><td>PASTE STEP</td><td>Cmd+V (in step focus)</td></tr>
+    </table>
+
+    <h3>STOCHASTIC</h3>
+    <table>
+      <tr><th>ACTION</th><th>KEY</th></tr>
+      <tr><td>TOGGLE STOCHASTIC (current param)</td><td>M — shows result on screen (2.5 s)</td></tr>
+      <tr><td>RANDOMIZE STOCHASTIC</td><td>E — shows result on screen (2.5 s)</td></tr>
+      <tr><td>STOCHASTIC AMOUNT +5% / -5%</td><td>Shift+↑ / Shift+↓</td></tr>
+    </table>
+
+    <h3>PATTERNS & BANKS</h3>
+    <table>
+      <tr><th>ACTION</th><th>KEY</th></tr>
+      <tr><td>OPEN BANK VIEW</td><td>0 (zero) or B</td></tr>
+      <tr><td>NAVIGATE SLOTS</td><td>↑ ↓ ← → (in bank view)</td></tr>
+      <tr><td>CHANGE BANK</td><td>Shift+← / Shift+→ (in bank view)</td></tr>
+      <tr><td>LOAD SLOT</td><td>Enter (in bank view)</td></tr>
+      <tr><td>SAVE SLOT</td><td>Cmd+S (in bank view)</td></tr>
+      <tr><td>DELETE SLOT</td><td>Delete / Backspace (in bank view)</td></tr>
+      <tr><td>ADD / REMOVE SLOT FROM CHAIN</td><td>Space (in bank view)</td></tr>
+      <tr><td>CLEAR CHAIN</td><td>X (in bank view)</td></tr>
+      <tr><td>FLATTEN CHAIN → SLOT</td><td>F (in bank view, cursor on target slot)</td></tr>
+      <tr><td>EXPORT CHAIN AS MIDI</td><td>E (in bank view)</td></tr>
+      <tr><td>SET MORPH B (cursor slot)</td><td>C (in bank view) — press again on same slot to cancel</td></tr>
+      <tr><td>MORPH BLEND +5% / −5%</td><td>Shift+↑ / Shift+↓ — when morph B is active, these keys blend instead of adjusting stochastic amount</td></tr>
+      <tr><td>CLOSE BANK VIEW</td><td>Escape</td></tr>
+    </table>
+
+    <h3>FILE IMPORT / EXPORT (JSON)</h3>
+    <table>
+      <tr><th>ACTION</th><th>KEY</th></tr>
+      <tr><td>SAVE BANK (current bank → JSON file)</td><td>Cmd+Shift+S</td></tr>
+      <tr><td>LOAD BANK (JSON file → current bank)</td><td>Cmd+Shift+O</td></tr>
+      <tr><td>SAVE PATTERN (active track → JSON file)</td><td>Cmd+Shift+P</td></tr>
+      <tr><td>LOAD PATTERN (JSON file → active track)</td><td>Cmd+Shift+L</td></tr>
+    </table>
+    <div class="callout">ALL FOUR OPEN A NATIVE macOS FILE DIALOG. BANKS INCLUDE ALL 8 TRACKS AND ALL SLOTS. PATTERNS INCLUDE ONLY THE ACTIVE TRACK.</div>
+
+    <h3>CONF VIEW</h3>
+    <table>
+      <tr><th>ACTION</th><th>KEY</th></tr>
+      <tr><td>OPEN / CLOSE CONF</td><td>Ctrl+M or Cmd+,</td></tr>
+      <tr><td>CLOSE CONF</td><td>Escape</td></tr>
+    </table>
+  </section>
+
+</main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// SCALE RENDERS
+// ══════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════
+// STEP GRID — same constants as the real sequencer
+// ══════════════════════════════════════════════════════════════════
+const STEP_X0 = 362, STEP_Y = 752, STEP_H = 128, STEP_GAP = 16;
+const STEP_ROW_H = 56, STEP_ROW_GAP = 16, STEP_GAP2 = 8;
+const NS = 'http://www.w3.org/2000/svg';
+const TRACK_COLORS = ['#00ff88','#ff4455','#4499ff','#ffaa00','#cc44ff','#44ffee','#ffff44','#ff8844'];
+const MODE_ABBR = {forward:'FWD',reverse:'RVR',bounce:'BNC',random:'RND',snake:'SNK',drunk:'DRK'};
+const PAGE_PARAMS = {
+  0:['PULS','STEP','PROB','MODE','VEL','SWNG','RESL','ROTA'],
+  1:['NOTE','SCAL','OCT','DENS','SPRD','HARM','INTV','NLEN'],
+  2:['DLY','DTIM','FDBK','RDEC','RSPD','RTCH','GATE','CC'],
+  3:['PROG','BANK','PTBK','PTRN','CHAN','CLK','PORT','DAW'],
+};
+const PAGE_NAMES = {0:'A·SEQ',1:'B·NOTE',2:'C·FX',3:'D·CONF'};
+
+// Euclidean pattern generator (same logic as the sequencer)
+
+
+
+
+
+
+
+// ══════════════════════════════════════════════════════════════════
+// ACTIVE NAV HIGHLIGHT
+// ══════════════════════════════════════════════════════════════════
+const navLinks = document.querySelectorAll('nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+    }
+  });
+}, { rootMargin: '-25% 0px -65% 0px' });
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+// ══════════════════════════════════════════════════════════════════
+// SCALE RENDERS — fit the 1440px render into the column width
+// ══════════════════════════════════════════════════════════════════
+function scaleRenders() {
+  document.querySelectorAll('.seq-render-wrap').forEach(wrap => {
+    const render = wrap.querySelector('.seq-render');
+    if (!render) return;
+    const w = wrap.clientWidth;
+    const scale = w / 1440;
+    render.style.transform = 'scale(' + scale + ')';
+    wrap.style.height = (920 * scale) + 'px';
+  });
+}
+scaleRenders();
+window.addEventListener('resize', scaleRenders);
+
+// ══════════════════════════════════════════════════════════════════
+// STEP GRIDS — dibujar patrón euclidean estático en cada render
+// ══════════════════════════════════════════════════════════════════
+const DOC_STEP_COLOR = '#FFFFFF';
+
+function euclidean(pulses, steps) {
+  if (steps <= 0) return [];
+  const pat = new Array(steps).fill(false);
+  if (pulses <= 0) return pat;
+  if (pulses >= steps) return new Array(steps).fill(true);
+  let bucket = 0;
+  for (let i = 0; i < steps; i++) {
+    bucket += pulses;
+    if (bucket >= steps) { bucket -= steps; pat[i] = true; }
+  }
+  return pat;
+}
+
+function drawStepGrid(g, pattern, cursor, color, locks) {
+  // Mismas constantes que el secuenciador real
+  const STEP_X0 = 362, STEP_Y = 752, STEP_H = 128, STEP_GAP = 16;
+  const STEP_ROW_H = 56, STEP_ROW_GAP = 16, STEP_GAP2 = 8;
+  while (g.firstChild) g.removeChild(g.firstChild);
+  const n = pattern.length || 16;
+  const twoRow = n > 32;
+  const cols = twoRow ? 32 : n;
+  const gap  = twoRow ? STEP_GAP2 : STEP_GAP;
+  const sw   = (1030 - gap * (cols - 1)) / cols;
+  const sh   = twoRow ? STEP_ROW_H : STEP_H;
+  for (let i = 0; i < n; i++) {
+    const col = twoRow ? (i % 32) : i;
+    const row = twoRow ? Math.floor(i / 32) : 0;
+    const x = STEP_X0 + col * (sw + gap);
+    const y = STEP_Y + row * (STEP_ROW_H + STEP_ROW_GAP);
+    const active = pattern[i];
+    const isHead = i === cursor;
+    const hasLock = locks && locks[i];
+    let fill = active ? (hasLock ? '#00CCCC' : color) : (hasLock ? '#1A4A54' : '#2E383D');
+    if (isHead) fill = active ? '#FF8C00' : '#8C9AA3';
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x); rect.setAttribute('y', y);
+    rect.setAttribute('width', sw); rect.setAttribute('height', sh);
+    rect.setAttribute('rx', '6'); rect.setAttribute('fill', fill);
+    g.appendChild(rect);
+  }
+}
+
+(function initStepGrids() {
+  const pat = euclidean(5, 16);
+  ['r-step-g', 'rA-step-g', 'rB-step-g', 'rC-step-g', 'rD-step-g'].forEach(function(id) {
+    const g = document.getElementById(id);
+    if (g) drawStepGrid(g, pat, 4, DOC_STEP_COLOR, []);
+  });
+})();
+
+</script>
+
+</body>
+</html>
