@@ -3337,13 +3337,6 @@ class Sequencer:
         global _seq_ref
         _seq_ref = self
         _settings  = _load_settings()
-        # Aplicar puertos MIDI guardados — en release, settings.json los tiene a None/vacío
-        # para que el usuario los configure. Sin esto, config.py siempre gana.
-        _PORT_KEYS = ('MIDI_OUT_PORT', 'MIDI_OUT_PORT2', 'LAUNCHPAD_PORT', 'NK_IN_PORT',
-                      'NK_OUT_PORT', 'MIDI_KB_PORT', 'MIDI_CLK_PORT', 'MIDI_SYNC_PORT')
-        for _k in _PORT_KEYS:
-            if _k in _settings:
-                setattr(config, _k, _settings[_k] or '')
         _def_map   = _default_cc_map()
         _saved_cc  = _settings.get('cc_map', {})
         def _load_group(key):
