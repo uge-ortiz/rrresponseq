@@ -34,6 +34,22 @@ if [ -f "banks.json" ] && [ "$1" != "--release" ]; then
 fi
 
 if [ "$1" == "--release" ]; then
+    # Limpiar puertos MIDI personales del settings.json antes de empaquetar
+    SETTINGS_IN_APP="rrresponseq-macOS/rrresponseq.app/Contents/Resources/settings.json"
+    if [ -f "$SETTINGS_IN_APP" ]; then
+        python3 -c "
+import json, sys
+with open('$SETTINGS_IN_APP') as f:
+    s = json.load(f)
+for k in ('MIDI_OUT_PORT','MIDI_OUT_PORT2','NK_IN_PORT','NK_OUT_PORT',
+          'CTRL_IN2_PORT','LAUNCHPAD_PORT','MIDI_KB_PORT','MIDI_CLK_PORT'):
+    if k in s:
+        s[k] = None
+with open('$SETTINGS_IN_APP', 'w') as f:
+    json.dump(s, f, indent=2)
+print('settings.json: puertos MIDI limpiados para release')
+"
+    fi
     rm -f rrresponseq-macOS-v0.1.0.zip
     zip -r rrresponseq-macOS-v0.1.0.zip rrresponseq-macOS/
     echo "Release zip ready: rrresponseq-macOS-v0.1.0.zip"

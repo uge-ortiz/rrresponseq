@@ -281,6 +281,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#191919;
 #trk-text{position:absolute;left:52px;top:756px;width:280px;height:120px;
   display:flex;align-items:center;justify-content:center;
   font-size:96px;line-height:108px;color:#FFFFFF}
+/* Badges portapapeles: ▸SEQ y ▸SET debajo del label TRK */
+#clip-seq-badge,#clip-set-badge{position:absolute;display:none;
+  font-size:22px;line-height:24px;color:#00FF88;background:#0A2010;
+  padding:2px 6px;border-radius:3px;pointer-events:none}
+#clip-seq-badge{left:60px;top:868px}
+#clip-set-badge{left:170px;top:868px}
 
 /* ─── Bank View — vista dentro de #root, coords SVG 1440×920 ─── */
 #bvTitleBank   {position:absolute;left:56px; top:55px;font-size:96px;line-height:66px;color:#A1A3A5}
@@ -375,6 +381,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#191919;
 <div id="hdr-mode">FWD</div>
 <div id="hdr-bpm">120</div>
 <div id="trk-text">TRK1</div>
+<div id="clip-seq-badge">▸SEQ</div>
+<div id="clip-set-badge">▸SET</div>
 <!-- Mapping icon: sliders — visible when mapping mode active -->
 <div id="hdr-map-icon"><svg viewBox="0 0 92 92" width="72" height="72" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M42.1667 30.6667L76.6667 30.6667" stroke="#A1A3A5" stroke-width="7.66667" stroke-linecap="round"/>
@@ -891,6 +899,11 @@ function applyState(s){
   setAttr('trk-box','stroke',_activeMuted?'#3A4A53':(_allMode?'#FFB73A':'#FFFFFF'));
   var _sg=document.getElementById('step-rects');
   if(_sg) _sg.setAttribute('opacity',_activeMuted?'0.35':'1');
+  // Indicadores de portapapeles: pequeños badges junto al TRK label
+  var _clipSeqEl=document.getElementById('clip-seq-badge');
+  var _clipSetEl=document.getElementById('clip-set-badge');
+  if(_clipSeqEl) _clipSeqEl.style.display=s.clip_seq_ok?'block':'none';
+  if(_clipSetEl) _clipSetEl.style.display=s.clip_set_ok?'block':'none';
   // Steps: sincronizar cursor desde servidor y arrancar animación local
   if(s.tracks&&s.tracks[s.track]){
     const td=s.tracks[s.track];
@@ -1152,7 +1165,7 @@ function applyMappingMode(s){
   const inMap=!!s.mapping_mode;
   const confView=document.getElementById('conf-view');
   if(!inMap){confView.style.display='none';_confActive=false;return;}
-  if(confView.style.display==='none') switchConfTab(_confTab);
+  if(confView.style.display==='none') switchConfTab('mapping');
   confView.style.display='block';
   _confActive=true;
 
@@ -1253,38 +1266,46 @@ document.addEventListener('keydown',function(e){
   // ── CONF view: navegación por teclado ──
   if(_confActive){
     const tabs=['settings','mapping','impexp','script'];
-    // Tab o flechas ◄/► para navegar entre tabs
+    // Tab: navegar entre tabs
     if(code==='Tab'){
       e.preventDefault();
-      switchConfTab(tabs[(tabs.indexOf(_confTab)+1)%tabs.length]);
+      switchConfTab(tabs[(tabs.indexOf(_confTab)+(shift?-1:1)+tabs.length)%tabs.length]);
       return;
     }
-    if(code==='ArrowLeft'&&_confTab!=='mapping'){
+    // Flechas ◄/►: en mapping = mueven cursor; en resto = cambian tab
+    if(code==='ArrowLeft'){
       e.preventDefault();
-      const idx=tabs.indexOf(_confTab);
-      switchConfTab(tabs[idx>0?idx-1:tabs.length-1]);
+      if(_confTab==='mapping'){
+        _confCursor=Math.max(0,_confCursor-1);
+        _updateConfCursor();
+      } else {
+        const idx=tabs.indexOf(_confTab);
+        switchConfTab(tabs[idx>0?idx-1:tabs.length-1]);
+      }
       return;
     }
-    if(code==='ArrowRight'&&_confTab!=='mapping'){
+    if(code==='ArrowRight'){
       e.preventDefault();
-      switchConfTab(tabs[(tabs.indexOf(_confTab)+1)%tabs.length]);
+      if(_confTab==='mapping'){
+        _confCursor=Math.min(_confCursorMax(),_confCursor+1);
+        _updateConfCursor();
+      } else {
+        switchConfTab(tabs[(tabs.indexOf(_confTab)+1)%tabs.length]);
+      }
       return;
     }
+    // Flechas ▲/▼: en mapping = cambian página/grupo; en resto = mueven cursor
     if(code==='ArrowUp'){
       e.preventDefault();
-      _confCursor=Math.max(0,_confCursor-1);
-      _updateConfCursor();
+      if(_confTab==='mapping') confPageDelta(-1);
+      else { _confCursor=Math.max(0,_confCursor-1); _updateConfCursor(); }
       return;
     }
     if(code==='ArrowDown'){
       e.preventDefault();
-      _confCursor=Math.min(_confCursorMax(),_confCursor+1);
-      _updateConfCursor();
+      if(_confTab==='mapping') confPageDelta(1);
+      else { _confCursor=Math.min(_confCursorMax(),_confCursor+1); _updateConfCursor(); }
       return;
-    }
-    if(_confTab==='mapping'){
-      if(code==='ArrowLeft'){e.preventDefault();confPageDelta(-1);return;}
-      if(code==='ArrowRight'){e.preventDefault();confPageDelta(1);return;}
     }
     if(code==='Enter'||code==='Space'){e.preventDefault();_confCursorActivate();return;}
     return;
@@ -1367,8 +1388,16 @@ document.addEventListener('keydown',function(e){
   // ── Copiar step: Cmd+C (con step focus) ──
   if(ctrl&&code==='KeyC'&&_kbStepFocus){e.preventDefault();_cmd({copy_step:true});return;}
 
+  // ── Copiar secuencia (sin step focus): Cmd+C; Ajustes: Cmd+Shift+C ──
+  if(ctrl&&shift&&code==='KeyC'&&!_kbStepFocus){e.preventDefault();_cmd({copy_settings:true});return;}
+  if(ctrl&&!shift&&code==='KeyC'&&!_kbStepFocus){e.preventDefault();_cmd({copy_sequence:true});return;}
+
   // ── Pegar step: Cmd+V (con step focus) ──
   if(ctrl&&code==='KeyV'&&_kbStepFocus){e.preventDefault();_cmd({paste_step:true});return;}
+
+  // ── Pegar secuencia: Cmd+V; Ajustes: Cmd+Shift+V ──
+  if(ctrl&&shift&&code==='KeyV'&&!_kbStepFocus){e.preventDefault();_cmd({paste_settings:true});return;}
+  if(ctrl&&!shift&&code==='KeyV'&&!_kbStepFocus){e.preventDefault();_cmd({paste_sequence:true});return;}
 
   // ── Cambio de página: Cmd+← / Cmd+→ ──
   if(ctrl&&code==='ArrowLeft'){e.preventDefault();_cmd({page_delta:-1});return;}
@@ -2083,6 +2112,91 @@ def _api_cmd():
                 s.last_msg = f"T{s.active+1} S{step+1} pasted"
             else:
                 s.last_msg = "clipboard empty"
+            s._render()
+        # ── Copiar SECUENCIA al portapapeles (Ctrl+C sin step focus) ──
+        if data.get('copy_sequence'):
+            t = s.tracks[s.active]
+            s.clip_sequence = {
+                'pattern':     t.pattern[:],
+                'pulses':      t.pulses,
+                'steps':       t.steps,
+                'step_locks':  {k: dict(v) for k, v in t.step_locks.items()},
+                'tonal_notes': t.tonal_notes[:],
+                'rotation':    t.rotation,
+                'auto_lanes':  {k: list(v) for k, v in t.auto_lanes.items()},
+            }
+            s.last_msg = f"T{s.active+1} SECUENCIA copiada ({t.pulses}/{t.steps})"
+            s._render()
+        # ── Copiar AJUSTES al portapapeles (Ctrl+Shift+C) ──
+        if data.get('copy_settings'):
+            t = s.tracks[s.active]
+            _SETTINGS_KEYS = [
+                'channel','port','program','bank_msb','send_pc',
+                'root','scale_idx','octave','play_mode','resolution','multiplier',
+                'prob','swing','velocity',
+                'delay_on','delay_steps','delay_fb',
+                'humanize','ratchet','ratchet_div','ratchet_curve',
+                'gate','note_len','strum','spread','density',
+                'harmony_src','harmony_on','interval',
+                'muted','note_offset','auto_play','script_id',
+            ]
+            snap = {k: getattr(t, k) for k in _SETTINGS_KEYS if hasattr(t, k)}
+            snap['cc_lanes']      = [dict(l) for l in t.cc_lanes]
+            snap['stoch_enabled'] = dict(t.stoch_enabled)
+            snap['stoch_amounts'] = dict(t.stoch_amounts)
+            snap['stoch_base']    = dict(t.stoch_base)
+            s.clip_settings = snap
+            s.last_msg = f"T{s.active+1} AJUSTES copiados"
+            s._render()
+        # ── Pegar SECUENCIA desde portapapeles (Ctrl+V sin step focus) ──
+        if data.get('paste_sequence'):
+            cb = s.clip_sequence
+            if cb:
+                s._push_undo(force=True)
+                t = s.tracks[s.active]
+                t.pattern     = [bool(x) for x in cb['pattern']]
+                t.pulses      = cb['pulses']
+                t.steps       = cb['steps']
+                t.step_locks  = {k: dict(v) for k, v in cb['step_locks'].items()}
+                t.tonal_notes = cb['tonal_notes'][:]
+                t.rotation    = cb['rotation']
+                t.auto_lanes  = {k: [tuple(p) for p in v] for k, v in cb['auto_lanes'].items()}
+                t.base_pattern = t.pattern[:]
+                t.cursor = 0; t.play_cursor = 0; t.note_cursor = 0; t.tonal_idx = 0
+                s.last_msg = f"T{s.active+1} ← SECUENCIA pegada"
+            else:
+                s.last_msg = "portapapeles vacío (Ctrl+C para copiar)"
+            s._render()
+        # ── Pegar AJUSTES desde portapapeles (Ctrl+Shift+V) ──
+        if data.get('paste_settings'):
+            cb = s.clip_settings
+            if cb:
+                s._push_undo(force=True)
+                t = s.tracks[s.active]
+                _SETTINGS_KEYS = [
+                    'channel','port','program','bank_msb','send_pc',
+                    'root','scale_idx','octave','play_mode','resolution','multiplier',
+                    'prob','swing','velocity',
+                    'delay_on','delay_steps','delay_fb',
+                    'humanize','ratchet','ratchet_div','ratchet_curve',
+                    'gate','note_len','strum','spread','density',
+                    'harmony_src','harmony_on','interval',
+                    'muted','note_offset','auto_play','script_id',
+                ]
+                for k in _SETTINGS_KEYS:
+                    if k in cb and hasattr(t, k):
+                        setattr(t, k, cb[k])
+                if 'cc_lanes' in cb:
+                    t.cc_lanes = [dict(l) for l in cb['cc_lanes']]
+                if 'stoch_enabled' in cb:
+                    t.stoch_enabled = dict(cb['stoch_enabled'])
+                if 'stoch_amounts' in cb:
+                    t.stoch_amounts = dict(cb['stoch_amounts'])
+                if 'stoch_base' in cb:
+                    t.stoch_base = dict(cb['stoch_base'])
+                s.last_msg = f"T{s.active+1} ← AJUSTES pegados"
+            else:
+                s.last_msg = "portapapeles vacío (Ctrl+Shift+C para copiar)"
             s._render()
         # ── Navegación de step para P-lock (Tab / Shift+Tab) ──
         if 'step_delta' in data:
@@ -3107,6 +3221,8 @@ class Sequencer:
         self.tick_count   = 0
         self.pending_load = None
         self._note_gen    = 0   # incrementa en cada carga de patrón; invalida timers en vuelo
+        self._pending_offs     = {}            # {(port,ch,note): (timer, gen)} — nota pendiente de note-off
+        self._pending_offs_lock = threading.Lock()  # protege _pending_offs en accesos concurrentes
         self.step_pg      = 0     # página de steps visible (0=steps 0-7, 1=8-15...)
         self.held_step        = None   # (track_idx, step_idx) del pad actualmente sostenido
         self.held_step_cycle  = 0     # índice actual al ciclar valores del pad sostenido
@@ -3127,6 +3243,8 @@ class Sequencer:
         self.copy_first       = True   # True = próximo pad hace COPY, False = PASTE
         self.clipboard_step   = None   # {'active': bool, 'locks': dict}
         self.clipboard_track  = None   # snapshot de pista para copy/paste entre tracks
+        self.clip_sequence    = None   # snapshot de SECUENCIA (Ctrl+C)
+        self.clip_settings    = None   # snapshot de AJUSTES (Ctrl+Shift+C)
         self.delete_mode      = False  # True = botón DELETE sostenido
         self.cc_draw          = False  # True = modo CC draw en el Launchpad
         self._last_render_ts  = 0.0    # throttle de _render (max ~20 fps)
@@ -4017,13 +4135,15 @@ class Sequencer:
                                             tr.step_locks.setdefault(step, {})['note'] = tr.last_kbd_note
                                         state = "●" if tr.pattern[step] else "·"
                                         self.last_msg = f"T{ti+1} step {step+1} → {state}"
-                                self.held_step = None
-                                self.held_knob_used = False
-                                self.held_kbd_count = 0
-                                # Arrancar timer de retorno a page view al soltar
-                                if self._detail_timer: self._detail_timer.cancel()
-                                self._detail_timer = threading.Timer(2.5, self._to_page_view)
-                                self._detail_timer.start()
+                            # Limpiar siempre held_step en note-off de cualquier pad del grid,
+                            # aunque no coincida — evita que se quede colgado si cambió step_pg
+                            # o se autoseleccionó otra pista entre note-on y note-off
+                            self.held_step = None
+                            self.held_knob_used = False
+                            self.held_kbd_count = 0
+                            if self._detail_timer: self._detail_timer.cancel()
+                            self._detail_timer = threading.Timer(2.5, self._to_page_view)
+                            self._detail_timer.start()
                     return
 
                 if status != 0x90:
@@ -4835,7 +4955,10 @@ class Sequencer:
                 tr = self.tracks[track_idx]
                 base_interval = 60.0 / self.bpm / 4
                 step_dur = tr.tick_interval(base_interval)
-                note_len = max(1, min(32, round(held / step_dur)))
+                # Cap al tamaño del patrón: evita notas tan largas que crucen
+                # el loop y creen timers superpuestos con la vuelta siguiente.
+                pat_steps = max(1, len(tr.pattern))
+                note_len = max(1, min(pat_steps, round(held / step_dur)))
                 with self.lock:
                     lk = tr.step_locks.setdefault(step, {})
                     lk['note_len'] = note_len
@@ -4848,25 +4971,10 @@ class Sequencer:
         with self.lock:
             pat_len = max(len(t.pattern), 1)
             if self.running:
-                now_kb = time.perf_counter()
-                # Calcular step_dur para la ventana de snap
-                _base = 60.0 / self.bpm / 4
-                _sdur = t.tick_interval(_base)
-                # Copiar la lista bajo lock para evitar race con el tick loop
-                fire_snap = list(t.fire_history)
-                # Solo mirar dentro de una ventana de ±2 steps — evita snaps a
-                # pasos muy antiguos cuando el usuario lleva un rato sin tocar
-                window = _sdur * 2.0
-                recent = [(ts, s) for ts, s in fire_snap if now_kb - ts <= window]
-                if recent:
-                    _, step = max(recent, key=lambda e: e[0])
-                    step = step % pat_len
-                elif fire_snap:
-                    # Fuera de ventana pero hay historial: usar el más reciente
-                    _, step = max(fire_snap, key=lambda e: e[0])
-                    step = step % pat_len
-                else:
-                    step = t.display_step % pat_len
+                # Grabar exactamente en el step que está sonando en este momento.
+                # display_step se actualiza en el tick loop al disparar cada step,
+                # así que refleja sin ambigüedad qué paso es el activo ahora mismo.
+                step = t.display_step % pat_len
             else:
                 # Step record: si hay un step en foco (Tab), grabar ahí sin avanzar
                 if self.kb_step_focus:
@@ -6401,6 +6509,9 @@ class Sequencer:
             if key not in seen:
                 seen.add(key)
                 self._out(t).send_message([0xB0 | ch, 123, 0])  # All Notes Off
+        # Limpiar dict de note-offs pendientes (los timers en vuelo filtrarán por gen)
+        with self._pending_offs_lock:
+            self._pending_offs.clear()
 
     def _send_program_debounced(self, track_idx, delay=0.6):
         """Cancela el timer anterior y programa un nuevo envío tras 'delay' segundos."""
@@ -6418,23 +6529,68 @@ class Sequencer:
         if self.daw_mirror and self.clk_out.is_port_open():
             self.clk_out.send_message(msg)
 
-    def _note_on(self, channel, note, velocity, gen=None, port=0):
+    def _note_on(self, channel, note, velocity, gen=None, port=0,
+                 duration=0.0, legato=True):
+        """Dispara un note-on y programa su note-off.
+
+        duration  — duración en segundos; si >0 se programa el note-off aquí mismo.
+        legato    — si True y la misma nota (port+ch+note+gen) ya está sonando,
+                    cancela el timer anterior y extiende la duración SIN retrigger
+                    (evita que el pad vuelva a atacar en cada vuelta del loop).
+        """
         if not self.running:
-            return   # ignora timers en vuelo tras parar
+            return
         if gen is not None and gen != self._note_gen:
-            return   # patrón cambió desde que se programó este timer
+            return
         note = max(0, min(127, note))
+        key  = (port, channel, note)
+
+        if legato:
+            with self._pending_offs_lock:
+                existing = self._pending_offs.get(key)
+                if existing is not None:
+                    existing_timer, existing_gen = existing
+                    if existing_gen == gen:
+                        # Misma generación: nota ya sonando → extender legato sin retrigger
+                        if existing_timer is not None:
+                            existing_timer.cancel()
+                        if duration > 0:
+                            t = threading.Timer(duration, self._note_off,
+                                                args=[channel, note, port, gen])
+                            self._pending_offs[key] = (t, gen)
+                            t.start()
+                        return          # no enviar nuevo note-on al sintetizador
+                    else:
+                        # Gen distinta: limpiar entrada obsoleta, proceder con note-on
+                        if existing_timer is not None:
+                            existing_timer.cancel()
+                        del self._pending_offs[key]
+
+        # Enviar note-on al sintetizador
         msg = [0x90 | channel, note, velocity]
         out = self.midi_outs[port] if port < len(self.midi_outs) else self.midi_out
         out.send_message(msg)
         self._mirror(msg)
 
+        # Programar note-off y registrar en _pending_offs
+        if duration > 0:
+            t = threading.Timer(duration, self._note_off,
+                                args=[channel, note, port, gen])
+            with self._pending_offs_lock:
+                self._pending_offs[key] = (t, gen)
+            t.start()
+
     def _note_off(self, channel, note, port=0, gen=None):
-        # Si el patrón cambió desde que se programó este timer, no cortes
-        # notas nuevas que puedan estar ya sonando en la misma pitch/canal.
+        """Envía note-off y limpia el registro de nota pendiente."""
+        note = max(0, min(127, note))
+        key  = (port, channel, note)
+        with self._pending_offs_lock:
+            existing = self._pending_offs.get(key)
+            if existing is not None and existing[1] == gen:
+                del self._pending_offs[key]   # limpiar solo si es la instancia correcta
+        # Ignorar si el patrón cambió (nueva gen ya programó su propio note-off)
         if gen is not None and gen != self._note_gen:
             return
-        note = max(0, min(127, note))
         msg = [0x80 | channel, note, 0]
         out = self.midi_outs[port] if port < len(self.midi_outs) else self.midi_out
         out.send_message(msg)
@@ -6851,6 +7007,7 @@ class Sequencer:
             chord = list(dict.fromkeys(chord))
             _gen = self._note_gen
             _port = t.port
+            hit_dur = note_dur * gate / max(1, ratchet)
             for r in range(ratchet):
                 delay = swing_offset + r * ratchet_interval
                 # Envolvente de velocidad: -1=fade out · 0=plano · +1=fade in
@@ -6863,20 +7020,22 @@ class Sequencer:
                     else:                             # fade out: decrece de fuerte a quieto
                         factor = 1.0 + ratchet_curve * t_r
                     hit_vel = max(1, min(127, int(vel * max(0.0, factor))))
+                # legato=True: si la nota ya suena (mismo gen), extiende sin retrigger
+                # legato=False en ratchet > 1: cada hit debe atacar de nuevo
+                _legato = (ratchet == 1)
                 for cn in chord:
                     threading.Timer(delay, self._note_on,
-                        args=[t.channel, cn, hit_vel, _gen, _port]).start()
-                    threading.Timer(delay + note_dur * gate / ratchet,
-                        self._note_off, args=[t.channel, cn, _port, _gen]).start()
+                        args=[t.channel, cn, hit_vel, _gen, _port],
+                        kwargs={'duration': hit_dur, 'legato': _legato}).start()
             if t.delay_on or 'delay_steps' in lk:
                 d_steps = lk.get('delay_steps', t.delay_steps)
                 d_fb    = lk.get('delay_fb',    t.delay_fb)
                 delay_time = swing_offset + step_dur * d_steps
                 fb_vel     = max(1, int(vel * d_fb))
+                # El eco siempre retrigger (legato=False): debe sonar como nuevo ataque
                 threading.Timer(delay_time, self._note_on,
-                    args=[t.channel, note, fb_vel, _gen, _port]).start()
-                threading.Timer(delay_time + note_dur * gate,
-                    self._note_off, args=[t.channel, note, _port, _gen]).start()
+                    args=[t.channel, note, fb_vel, _gen, _port],
+                    kwargs={'duration': note_dur * gate, 'legato': False}).start()
             t.advance_note()
         t.cursor    = (t.cursor + 1) % pat_len
         t.even_step = not t.even_step
@@ -7247,6 +7406,8 @@ class Sequencer:
                 'compact_view':    self.compact_view,
                 'all_page_params': self._get_all_page_params() if self.compact_view else None,
                 'step_focus': (list(self.step_focus) if self.step_focus else None),
+                'clip_seq_ok':  self.clip_sequence is not None,
+                'clip_set_ok':  self.clip_settings is not None,
                 'step_pg': self.step_pg,
                 'step_pg_total': (t_a.steps + 7) // 8,
                 # Contador del header: cambia según contexto (p-lock o chord/held)
@@ -7454,6 +7615,12 @@ class Sequencer:
         """MIDI Panic: All Notes Off + All Sound Off en los 16 canales de todos los puertos.
         Más agresivo que _silence_all_tracks — cubre canales no asignados a ninguna pista."""
         self._note_gen += 1   # invalida todos los note_on de timers en vuelo
+        # Cancelar y limpiar todos los timers de note-off pendientes
+        with self._pending_offs_lock:
+            for timer, _ in self._pending_offs.values():
+                if timer is not None:
+                    timer.cancel()
+            self._pending_offs.clear()
         for out in self.midi_outs:
             for ch in range(16):
                 try:
