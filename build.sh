@@ -29,7 +29,20 @@ fi
 
 echo "Installing dependencies..."
 arch -x86_64 "$BUILD_PYTHON" -m pip install --quiet --upgrade pip setuptools wheel
-arch -x86_64 "$BUILD_PYTHON" -m pip install --quiet py2app pywebview flask rtmidi mido
+arch -x86_64 "$BUILD_PYTHON" -m pip install --quiet py2app pywebview flask python-rtmidi mido
+
+# python-rtmidi builds x86_64 only from pip wheel; merge with arm64 from the native venv
+# so the bundle's _rtmidi.so is universal2 and runs on both Intel and Apple Silicon.
+ARM64_SO="./venv/lib/python3.12/site-packages/rtmidi/_rtmidi.cpython-312-darwin.so"
+X86_SO="$BUILD_ENV/lib/python3.12/site-packages/rtmidi/_rtmidi.cpython-312-darwin.so"
+if [ -f "$ARM64_SO" ] && [ -f "$X86_SO" ]; then
+    ARM_ARCH=$(file "$ARM64_SO" | grep -o "arm64")
+    X86_ARCH=$(file "$X86_SO" | grep -o "x86_64")
+    if [ "$ARM_ARCH" = "arm64" ] && [ "$X86_ARCH" = "x86_64" ]; then
+        lipo -create "$ARM64_SO" "$X86_SO" -output "$X86_SO"
+        echo "python-rtmidi: universal2 OK"
+    fi
+fi
 
 chmod -R u+w build dist rrresponseq-macOS 2>/dev/null || true
 rm -rf build dist rrresponseq-macOS
