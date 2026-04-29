@@ -1,25 +1,44 @@
 #!/bin/bash
+# Builds rrresponseq.app as a universal2 (Intel + Apple Silicon) macOS app.
+# Uses /usr/local/bin/python3.12 (python.org universal2) via arch -x86_64 so
+# all C extensions compile for x86_64; the resulting .app runs natively on
+# Intel and via Rosetta on Apple Silicon.
+#
+# Usage:
+#   ./build.sh            → local dev build (copies banks.json into app)
+#   ./build.sh --release  → release build (clears personal MIDI ports, zips)
 
-VENV_PYTHON="./venv/bin/python3"
+set -e
 
-echo "Building rrresponseq macOS app..."
+UNI_PYTHON="/usr/local/bin/python3.12"
+BUILD_ENV="./build_env_x86"
+BUILD_PYTHON="$BUILD_ENV/bin/python3"
+export MACOSX_DEPLOYMENT_TARGET="10.13"
 
-if [ ! -f "$VENV_PYTHON" ]; then
-    echo "venv/bin/python3 not found"
-    exit 1
+echo "Building rrresponseq macOS app (universal x86_64 / arm64 via Rosetta)..."
+
+# ── Create x86_64 venv if needed ─────────────────────────────────────────────
+if [ ! -f "$BUILD_PYTHON" ]; then
+    echo "Creating x86_64 build env at $BUILD_ENV ..."
+    if [ ! -f "$UNI_PYTHON" ]; then
+        echo "ERROR: $UNI_PYTHON not found. Install python.org Python 3.12."
+        exit 1
+    fi
+    arch -x86_64 "$UNI_PYTHON" -m venv "$BUILD_ENV"
 fi
 
 echo "Installing dependencies..."
-$VENV_PYTHON -m pip install --quiet setuptools py2app pywebview pygame mido flask 2>/dev/null || true
+arch -x86_64 "$BUILD_PYTHON" -m pip install --quiet --upgrade pip setuptools wheel
+arch -x86_64 "$BUILD_PYTHON" -m pip install --quiet py2app pywebview flask rtmidi mido
 
 chmod -R u+w build dist rrresponseq-macOS 2>/dev/null || true
 rm -rf build dist rrresponseq-macOS
 
 echo "Building app..."
-$VENV_PYTHON setup.py py2app
+arch -x86_64 "$BUILD_PYTHON" setup.py py2app
 
 if [ ! -d "dist/rrresponseq.app" ]; then
-    echo "Build failed"
+    echo "Build failed — dist/rrresponseq.app not found"
     exit 1
 fi
 
@@ -27,18 +46,18 @@ mkdir -p rrresponseq-macOS
 mv dist/rrresponseq.app rrresponseq-macOS/
 rm -rf dist build
 
-# Restore user banks for local use
+# Restore user banks for local dev use
 if [ -f "banks.json" ] && [ "$1" != "--release" ]; then
     cp banks.json rrresponseq-macOS/rrresponseq.app/Contents/Resources/banks.json
-    echo "Restored your banks.json"
+    echo "Restored banks.json"
 fi
 
 if [ "$1" == "--release" ]; then
-    # Limpiar puertos MIDI personales del settings.json antes de empaquetar
+    # Clear personal MIDI ports from bundled settings.json
     SETTINGS_IN_APP="rrresponseq-macOS/rrresponseq.app/Contents/Resources/settings.json"
     if [ -f "$SETTINGS_IN_APP" ]; then
         python3 -c "
-import json, sys
+import json
 with open('$SETTINGS_IN_APP') as f:
     s = json.load(f)
 for k in ('MIDI_OUT_PORT','MIDI_OUT_PORT2','NK_IN_PORT','NK_OUT_PORT',
@@ -47,12 +66,16 @@ for k in ('MIDI_OUT_PORT','MIDI_OUT_PORT2','NK_IN_PORT','NK_OUT_PORT',
         s[k] = None
 with open('$SETTINGS_IN_APP', 'w') as f:
     json.dump(s, f, indent=2)
-print('settings.json: puertos MIDI limpiados para release')
+print('settings.json: MIDI ports cleared for release')
 "
     fi
-    rm -f rrresponseq-macOS-v0.1.0.zip
-    zip -r rrresponseq-macOS-v0.1.0.zip rrresponseq-macOS/
-    echo "Release zip ready: rrresponseq-macOS-v0.1.0.zip"
+    VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
+    ZIP_NAME="rrresponseq-macOS-${VERSION}.zip"
+    rm -f "$ZIP_NAME"
+    zip -r "$ZIP_NAME" rrresponseq-macOS/
+    echo "Release zip ready: $ZIP_NAME"
+    file "rrresponseq-macOS/rrresponseq.app/Contents/MacOS/rrresponseq"
 else
     echo "App ready: rrresponseq-macOS/rrresponseq.app"
+    file "rrresponseq-macOS/rrresponseq.app/Contents/MacOS/rrresponseq"
 fi
