@@ -1324,6 +1324,8 @@ document.addEventListener('keydown',function(e){
   // ── Bank View activo: capturar navegación y acciones ──
   if(_bankViewActive){
     if(code==='Escape'){e.preventDefault();_cmd({bank_view_toggle:true});return;}
+    // Space = play/stop también en bank view (igual que fuera)
+    if(code==='Space'){e.preventDefault();_cmd({play:true});return;}
     if(code==='ArrowUp'){e.preventDefault();_cmd({bank_cursor_move:[-1,0]});return;}
     if(code==='ArrowDown'){e.preventDefault();_cmd({bank_cursor_move:[1,0]});return;}
     if(code==='ArrowLeft'){
@@ -1336,9 +1338,14 @@ document.addEventListener('keydown',function(e){
     }
     if(code==='Tab'){e.preventDefault();_cmd({bank_delta:shift?-1:1});return;}
     if(code==='Enter'){e.preventDefault();_cmd({bank_load_slot:true});return;}
-    if(code==='Delete'||code==='Backspace'){e.preventDefault();_cmd({bank_delete_slot:true});return;}
+    // Delete/Backspace = borrar slot guardado; Ctrl+Backspace = borrar slot Y limpiar pistas
+    if((code==='Delete'||code==='Backspace')&&!ctrl){e.preventDefault();_cmd({bank_delete_slot:true});return;}
+    if(ctrl&&(code==='Delete'||code==='Backspace')){e.preventDefault();_cmd({bank_delete_and_clear:true});return;}
     if(ctrl&&code==='KeyS'){e.preventDefault();_cmd({bank_save_slot:true});return;}
-    if(code==='Space'){e.preventDefault();_cmd({chain_toggle_slot:true});return;}
+    // N = nuevo patrón en blanco (limpia las 8 pistas activas)
+    if(code==='KeyN'){e.preventDefault();_cmd({bank_new_pattern:true});return;}
+    // P = añadir/quitar slot del chain (antes era Space)
+    if(code==='KeyP'){e.preventDefault();_cmd({chain_toggle_slot:true});return;}
     if(code==='KeyX'){e.preventDefault();_cmd({chain_clear:true});return;}
     if(code==='KeyE'){e.preventDefault();window.open('/export/midi','_blank');return;}
     if(code==='KeyF'){e.preventDefault();_cmd({chain_flatten:true});return;}
@@ -1383,7 +1390,9 @@ document.addEventListener('keydown',function(e){
   }
 
   // ── Borrar track completo (patrón + locks): Cmd+Backspace ──
-  if(ctrl&&code==='Backspace'){e.preventDefault();_cmd({clear_track:true});return;}
+  // ── Borrar TODAS las pistas: Cmd+Shift+Backspace ──
+  if(ctrl&&shift&&code==='Backspace'){e.preventDefault();_cmd({clear_all_tracks:true});return;}
+  if(ctrl&&!shift&&code==='Backspace'){e.preventDefault();_cmd({clear_track:true});return;}
 
   // ── Copiar step: Cmd+C (con step focus) ──
   if(ctrl&&code==='KeyC'&&_kbStepFocus){e.preventDefault();_cmd({copy_step:true});return;}
@@ -2082,9 +2091,24 @@ def _api_cmd():
             t = s.tracks[s.active]
             n = t.steps
             t.pattern    = [False] * n
+            t.base_pattern = [False] * n
             t.step_locks = {}
+            t.tonal_notes = []
             t.pulses     = 0
             s.last_msg   = f"T{s.active+1} CLEAR"
+            s._render()
+        # ── Borrar TODAS las pistas (Cmd+Shift+Backspace) ──
+        if data.get('clear_all_tracks'):
+            s._push_undo(force=True)
+            for t in s.tracks:
+                n = t.steps
+                t.pattern    = [False] * n
+                t.base_pattern = [False] * n
+                t.step_locks = {}
+                t.tonal_notes = []
+                t.pulses     = 0
+            s.active_slot = -1
+            s.last_msg = "TODAS las pistas borradas"
             s._render()
         # ── Copiar step (Cmd+C con step focus) ──
         if data.get('copy_step'):
@@ -2372,7 +2396,45 @@ def _api_cmd():
             s.kb_bank_cursor = (0, 0)
             s.last_msg = f"Bank → {s.current_bank+1}"
             s._render()
-        # ── Chain: añadir/quitar slot bajo cursor (Space en Bank View) ──
+        # ── Nuevo patrón en blanco (N en Bank View) ──
+        if s.kb_bank_view and data.get('bank_new_pattern'):
+            s._push_undo(force=True)
+            for t in s.tracks:
+                n = t.steps
+                t.pattern    = [False] * n
+                t.base_pattern = [False] * n
+                t.step_locks = {}
+                t.tonal_notes = []
+                t.pulses     = 0
+            s.active_slot = -1
+            s.last_msg = "Patrón borrado — lienzo en blanco"
+            s._render()
+        # ── Borrar slot guardado Y limpiar pistas (Ctrl+Backspace en Bank View) ──
+        if s.kb_bank_view and data.get('bank_delete_and_clear'):
+            row, col = s.kb_bank_cursor
+            slot = row * 8 + col
+            was_active = (s.active_slot == slot)
+            if slot in s.banks[s.current_bank]:
+                del s.banks[s.current_bank][slot]
+                s._save_banks()
+                if was_active:
+                    s.active_slot = -1
+                s.last_msg = f"Eliminado: B{s.current_bank+1}.{slot+1}"
+            else:
+                s.last_msg = f"Slot vacío: B{s.current_bank+1}.{slot+1}"
+            # Siempre limpiar las pistas al usar este comando
+            s._push_undo(force=True)
+            for t in s.tracks:
+                n = t.steps
+                t.pattern    = [False] * n
+                t.base_pattern = [False] * n
+                t.step_locks = {}
+                t.tonal_notes = []
+                t.pulses     = 0
+            s.active_slot = -1
+            s.last_msg += " + pistas limpias"
+            s._render()
+        # ── Chain: añadir/quitar slot bajo cursor (P en Bank View) ──
         if s.kb_bank_view and data.get('chain_toggle_slot'):
             row, col = s.kb_bank_cursor
             slot  = row * 8 + col
@@ -4102,7 +4164,7 @@ class Sequencer:
                                     self._detail_timer.cancel()
                                     self._detail_timer = None
                                 self.view_mode = 'page'
-                            self.last_msg = "PATTERNS  (pad=load  Shift+pad=save)" if self.bank_view else "STEPS"
+                            self.last_msg = "PATTERNS  (Enter=load  Ctrl+S=save  N=nuevo  P=chain)" if self.bank_view else "STEPS"
                             self._render()
                     return
 
