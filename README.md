@@ -1,3 +1,5 @@
+![rrresponseq](https://github.com/uge-ortiz/rrresponseq/blob/main/Main%20View.jpg?raw=true)
+
 # rrresponseq — Generative MIDI Sequencer
 
 A real-time generative MIDI sequencer built for creative exploration and live performance. Control 8 independent tracks with Euclidean patterns, stochastic parameters, and evolving scripts.
