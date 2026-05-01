@@ -229,18 +229,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#191919;
   align-items:center;gap:32px;font-size:96px;line-height:108px;color:#A1A3A5}
 #conf-nav .arrow{cursor:pointer;color:#3A4A53;transition:color .15s;padding:0 16px}
 #conf-nav .arrow:hover{color:#FFFFFF}
-#conf-settings,#conf-mapping,#conf-impexp,#conf-script{
+#conf-settings,#conf-mapping,#conf-impexp{
   position:absolute;top:0;left:0;width:1440px;height:840px;display:none}
-#conf-script{padding:140px 48px 0}
-#cfsc-track-info{font-size:64px;color:#A1A3A5;margin-bottom:20px}
-#cfsc-track-info span{color:#FFB73A}
-#cfsc-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 32px;
-  font-family:"Disket Mono",monospace;font-size:32px}
-.cfsc-item{padding:8px 12px;color:#5A6A73;cursor:pointer;border-radius:4px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cfsc-item:hover{background:#1E2C35;color:#FFFFFF}
-.cfsc-item.active{color:#FFB73A;background:#1E2C35}
-.cfsc-item.off{color:#FF4466}
 .cf-row{position:absolute;width:628px;height:138px;cursor:pointer}
 .cf-row::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:3px;background:#3A4A53}
 .cf-row:hover .cf-val{opacity:0.75}
@@ -267,7 +257,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#191919;
 #cf-tab-settings{left:48px}
 #cf-tab-mapping{left:528px}
 #cf-tab-impexp{left:1008px}
-#cf-tab-script{left:1398px}
 .cf-tab.cf-tab-active{color:#FFFFFF}
 .cf-tab:not(.cf-tab-active){color:#3A4A53}
 /* Pattern Script Editor */
@@ -531,12 +520,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#191919;
   <!-- IMP/EXP panel -->
   <div id="conf-impexp">
     <div class="cf-row" id="cfie0" style="left:48px;top:208px">
-      <span class="cf-name">EXPORTAR MAPEO</span>
+      <span class="cf-name">EXPORT MAPPING</span>
       <span class="cf-val" id="cfiev0">↓ .json</span>
     </div>
     <div class="cf-row" id="cfie1" style="left:48px;top:346px">
-      <span class="cf-name">IMPORTAR FICHERO</span>
-      <span class="cf-val" id="cfiev1">↑ abrir…</span>
+      <span class="cf-name">IMPORT FILE</span>
+      <span class="cf-val" id="cfiev1">↑ open…</span>
     </div>
     <div class="cf-row" id="cfie2" style="left:48px;top:484px">
       <span class="cf-name">PRESET</span>
@@ -550,17 +539,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#191919;
     <input type="file" id="cfie-file-input" accept=".json" style="display:none">
   </div>
 
-  <!-- SCRIPT panel -->
-  <div id="conf-script">
-    <div id="cfsc-track-info">T1 → <span id="cfsc-current">OFF</span></div>
-    <div id="cfsc-list"></div>
-  </div>
-
   <!-- Pestañas -->
   <div class="cf-tab cf-tab-active" id="cf-tab-settings">STG</div>
   <div class="cf-tab" id="cf-tab-mapping">MAP</div>
   <div class="cf-tab" id="cf-tab-impexp">MOV</div>
-  <div class="cf-tab" id="cf-tab-script">SCR</div>
 </div>
 
 </div>
@@ -871,7 +853,6 @@ function renderCompactView(s){
 function applyState(s){
   renderBankView(s);
   renderCompactView(s);
-  renderScriptView(s);
   // Sincronizar estado de teclado con servidor
   if(s.kb_step_focus!==undefined) _kbStepFocus=!!s.kb_step_focus;
   if(s.kb_enabled!==undefined)    _kbEnabled=!!s.kb_enabled;
@@ -986,7 +967,7 @@ var _confCursor=0;
 var _confActive=false;
 var _confGroup='knob';
 const MISC_LABELS=['BPM','UNDO','REDO','COPY','PASTE','S.BANK','L.BANK','SHIFT'];
-const GRP_DISPLAY={'knob':'KNOB','fade':'FADE','btn_s':'S-BTN','btn_m':'M-BTN','misc':'MISC'};
+const GRP_DISPLAY={'knob':'KNOB','fade':'FADE','btn_s':'S-BTN','btn_m':'R-BTN','misc':'MISC'};
 const GRP_MAX={'knob':4,'fade':4,'btn_s':4,'btn_m':4,'misc':1};
 
 function _confCursorMax(){
@@ -1027,7 +1008,7 @@ function _cfieActivate(idx){
       const a=document.createElement('a');
       a.href=url; a.download='mapping.json'; document.body.appendChild(a); a.click();
       document.body.removeChild(a); URL.revokeObjectURL(url);
-      _cfieStatus('✓ EXPORTADO');
+      _cfieStatus('✓ EXPORTED');
     }).catch(()=>_cfieStatus('✗ ERROR'));
   } else if(idx===1){
     // Importar desde fichero
@@ -1036,13 +1017,13 @@ function _cfieActivate(idx){
     fetch('/api/mapping/preset',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name:'nano'})})
-    .then(r=>_cfieStatus(r.ok?'✓ NANO KONTROL CARGADO':'✗ ERROR'))
+    .then(r=>_cfieStatus(r.ok?'✓ NANO KONTROL LOADED':'✗ ERROR'))
     .catch(()=>_cfieStatus('✗ ERROR'));
   } else if(idx===3){
     fetch('/api/mapping/preset',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name:'launchkey'})})
-    .then(r=>_cfieStatus(r.ok?'✓ LAUNCHKEY MK4 CARGADO':'✗ ERROR'))
+    .then(r=>_cfieStatus(r.ok?'✓ LAUNCHKEY MK4 LOADED':'✗ ERROR'))
     .catch(()=>_cfieStatus('✗ ERROR'));
   }
 }
@@ -1058,10 +1039,10 @@ document.getElementById('cfie-file-input').addEventListener('change',function(e)
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data)})
       .then(r=>{
-        if(r.ok) _cfieStatus('✓ MAPEO IMPORTADO');
+        if(r.ok) _cfieStatus('✓ MAPPING IMPORTED');
         else r.text().then(t=>_cfieStatus('✗ '+(t||'ERROR')));
       }).catch(()=>_cfieStatus('✗ ERROR'));
-    } catch(err){ _cfieStatus('✗ JSON INVÁLIDO'); }
+    } catch(err){ _cfieStatus('✗ INVALID JSON'); }
   };
   reader.readAsText(file);
   e.target.value='';
@@ -1072,7 +1053,8 @@ document.getElementById('cfie-file-input').addEventListener('change',function(e)
   if(el) el.onclick=()=>_cfieActivate(i);
 });
 
-function _confCursorActivate(){
+function _confCursorActivate(dir){
+  dir=dir||1;
   if(_confTab==='mapping'){
     const pi=_pendingState?(_pendingState.page_idx||0):0;
     const grp=_confGroup||'knob';
@@ -1083,7 +1065,7 @@ function _confCursorActivate(){
     const keys=['midi_out','midi_out2','lp_port','kb_port','nk_in'];
     fetch('/api/settings/cycle_port',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({slot:keys[_confCursor]})});
+      body:JSON.stringify({slot:keys[_confCursor],direction:dir})});
   } else if(_confTab==='impexp'){
     _cfieActivate(_confCursor);
   }
@@ -1101,14 +1083,9 @@ function confPageDelta(d){
 function switchConfTab(tab){
   _confTab=tab;
   _confCursor=0;
-  ['settings','mapping','impexp','script'].forEach(t=>{
-    if(t==='script'){
-      const el=document.getElementById('conf-script');
-      if(el) el.style.display=(t===tab)?'block':'none';
-    }else{
-      const el=document.getElementById('conf-'+t);
-      if(el) el.style.display=(t===tab)?'block':'none';
-    }
+  ['settings','mapping','impexp'].forEach(t=>{
+    const el=document.getElementById('conf-'+t);
+    if(el) el.style.display=(t===tab)?'block':'none';
     const btn=document.getElementById('cf-tab-'+t);
     if(btn) btn.classList.toggle('cf-tab-active',t===tab);
   });
@@ -1120,46 +1097,6 @@ function switchConfTab(tab){
 document.getElementById('cf-tab-settings').onclick=()=>switchConfTab('settings');
 document.getElementById('cf-tab-mapping').onclick=()=>switchConfTab('mapping');
 document.getElementById('cf-tab-impexp').onclick=()=>switchConfTab('impexp');
-document.getElementById('cf-tab-script').onclick=()=>switchConfTab('script');
-
-var _scriptsList=null;
-function _loadScriptsList(){
-  fetch('/api/scripts').then(function(r){return r.json();}).then(function(data){
-    _scriptsList=data;
-  }).catch(function(){});
-}
-_loadScriptsList();
-
-function renderScriptView(s){
-  if(!s||!_scriptsList) return;
-  var trk=(s.track||0)+1;
-  var curId=(s.tracks&&s.tracks[s.track||0])?s.tracks[s.track||0].script_id:null;
-  var curName='OFF';
-  if(curId){
-    var found=_scriptsList.find(function(sc){return sc.id===curId;});
-    if(found) curName=found.name;
-  }
-  var info=document.getElementById('cfsc-track-info');
-  if(info) info.innerHTML='T'+trk+' → <span>'+curName.toUpperCase()+'</span>';
-  var list=document.getElementById('cfsc-list');
-  if(!list) return;
-  // Solo reconstruir si cambió el contenido
-  var sig='t'+trk+'|'+(curId||'');
-  if(list._sig===sig) return;
-  list._sig=sig;
-  var html='<div class="cfsc-item off" data-sid="">— OFF —</div>';
-  _scriptsList.forEach(function(sc){
-    var act=(sc.id===curId)?' active':'';
-    html+='<div class="cfsc-item'+act+'" data-sid="'+sc.id+'">'+sc.name+'</div>';
-  });
-  list.innerHTML=html;
-  list.querySelectorAll('.cfsc-item').forEach(function(el){
-    el.onclick=function(){
-      var sid=el.getAttribute('data-sid')||null;
-      _cmd({script_id: sid});
-    };
-  });
-}
 
 function applyMappingMode(s){
   const inMap=!!s.mapping_mode;
@@ -1174,11 +1111,15 @@ function applyMappingMode(s){
   const grp=s.mapping_group||'knob';
   _confGroup=grp;
   const isMisc=(grp==='misc');
-  const pgMax=GRP_MAX[grp]||4;
+  const _GRP_ORDER=['knob','fade','btn_s','btn_m','misc'];
+  const _GRP_SIZES={knob:4,fade:4,btn_s:4,btn_m:4,misc:1};
+  const _TOTAL_PG=_GRP_ORDER.reduce((a,g)=>a+_GRP_SIZES[g],0);
+  let _globalPg=pi;
+  for(let i=0;i<_GRP_ORDER.indexOf(grp);i++) _globalPg+=_GRP_SIZES[_GRP_ORDER[i]];
   const nav=document.getElementById('conf-nav');
   if(nav) nav.style.display=(_confTab==='mapping')?'flex':'none';
   setText('conf-grp-lbl',GRP_DISPLAY[grp]||grp);
-  setText('conf-pg-num',(pi+1)+'/'+pgMax);
+  setText('conf-pg-num',(_globalPg+1)+'/'+_TOTAL_PG);
   const ccs=s.cc_map_current||[];
   const midiCh=pi+1;
   ccs.forEach((cc,i)=>{
@@ -1265,49 +1206,50 @@ document.addEventListener('keydown',function(e){
 
   // ── CONF view: navegación por teclado ──
   if(_confActive){
-    const tabs=['settings','mapping','impexp','script'];
-    // Tab: navegar entre tabs
+    const tabs=['settings','mapping','impexp'];
+    // Tab / Shift+Tab: cicla siempre entre tabs (STG→MAP→MOV→STG)
     if(code==='Tab'){
       e.preventDefault();
       switchConfTab(tabs[(tabs.indexOf(_confTab)+(shift?-1:1)+tabs.length)%tabs.length]);
       return;
     }
-    // Flechas ◄/►: en mapping = mueven cursor; en resto = cambian tab
+    // ◄/►: mueve cursor entre filas/items; en MAP, al llegar al borde avanza de página
     if(code==='ArrowLeft'){
       e.preventDefault();
-      if(_confTab==='mapping'){
-        _confCursor=Math.max(0,_confCursor-1);
-        _updateConfCursor();
+      if(_confTab==='mapping'&&_confCursor===0){
+        confPageDelta(-1);
+        _confCursor=_confCursorMax();
       } else {
-        const idx=tabs.indexOf(_confTab);
-        switchConfTab(tabs[idx>0?idx-1:tabs.length-1]);
+        _confCursor=Math.max(0,_confCursor-1);
       }
+      _updateConfCursor();
       return;
     }
     if(code==='ArrowRight'){
       e.preventDefault();
-      if(_confTab==='mapping'){
-        _confCursor=Math.min(_confCursorMax(),_confCursor+1);
-        _updateConfCursor();
+      if(_confTab==='mapping'&&_confCursor===_confCursorMax()){
+        confPageDelta(1);
+        _confCursor=0;
       } else {
-        switchConfTab(tabs[(tabs.indexOf(_confTab)+1)%tabs.length]);
+        _confCursor=Math.min(_confCursorMax(),_confCursor+1);
       }
+      _updateConfCursor();
       return;
     }
-    // Flechas ▲/▼: en mapping = cambian página/grupo; en resto = mueven cursor
+    // ▲/▼: en mapping = cambia página; en STG/MOV = cambia valor del cursor
     if(code==='ArrowUp'){
       e.preventDefault();
       if(_confTab==='mapping') confPageDelta(-1);
-      else { _confCursor=Math.max(0,_confCursor-1); _updateConfCursor(); }
+      else _confCursorActivate(-1);
       return;
     }
     if(code==='ArrowDown'){
       e.preventDefault();
       if(_confTab==='mapping') confPageDelta(1);
-      else { _confCursor=Math.min(_confCursorMax(),_confCursor+1); _updateConfCursor(); }
+      else _confCursorActivate(1);
       return;
     }
-    if(code==='Enter'||code==='Space'){e.preventDefault();_confCursorActivate();return;}
+    if(code==='Enter'||code==='Space'){e.preventDefault();_confCursorActivate(1);return;}
     return;
   }
 
@@ -1688,9 +1630,10 @@ def _api_cycle_port():
     ports     = [''] + (in_ports if is_input else out_ports)
     cfg_key   = SLOT_TO_CONFIG[slot]
     current   = getattr(config, cfg_key, '')
+    direction = int(data.get('direction', 1))
     try:    idx = ports.index(current)
     except: idx = 0
-    new_port  = ports[(idx + 1) % len(ports)]
+    new_port  = ports[(idx + direction) % len(ports)]
     setattr(config, cfg_key, new_port)
     s = _load_settings()
     s[cfg_key] = new_port
@@ -3541,7 +3484,6 @@ class Sequencer:
                 if cc == 0:
                     return  # Bank Select ignorado desde ext MIDI
                 # Grabar en step-lock solo si está grabando y corriendo
-                # No actualizar lane['val'] — el display es estático (refleja el plock grabado)
                 if self.recording and self.running:
                     with self.lock:
                         target = next(
@@ -4347,6 +4289,7 @@ class Sequencer:
                             self._push_undo(force=False)
                             lk = t.step_locks.setdefault(step, {})
                             lk.setdefault('cc_vals', {})[lane] = cc_val
+                            lane_cfg['val'] = cc_val  # sincronizar para _restore_midi_state
                             self.last_msg = f"T{self.active+1} s{step+1} CC{cc_num} → {cc_val}"
                             if cc_num >= 0:
                                 self._out(t).send_message([0xB0 | t.channel, cc_num, cc_val])
@@ -6986,6 +6929,7 @@ class Sequencer:
                     m = [0xB0 | t.channel, ln['num'], cv]
                     self._out(t).send_message(m)
                     self._mirror(m)
+                    ln['val'] = cv  # mantener lane val al día para _restore_midi_state
             if 'pitch_bend' in lk:
                 pb = lk['pitch_bend']
                 m = [0xE0 | t.channel, pb & 0x7F, (pb >> 7) & 0x7F]
