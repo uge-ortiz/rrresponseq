@@ -27,6 +27,8 @@ A real-time generative MIDI sequencer built for creative exploration and live pe
 - **MIDI Clock sync** — Send/receive clock for DAW integration
 - **Pattern scripting** — JavaScript-like Python code runs every loop, modulating patterns and parameters
 
+**A manual can be found [here](http://rrresponseq.az-rotator.com/)**
+
 ## Installation
 
 ### macOS App (easiest)
