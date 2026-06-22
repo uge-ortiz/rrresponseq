@@ -169,7 +169,7 @@ In short:
 Built by Uge Ortiz / AZ-Rotator / Claude Code  
 Inspired by Euclidean rhythms, generative music, and hardware sequencers.
 Contact: uge@az-rotator.com 
-https://www.instagram.com/rrresponseq/
+
 
 Font: [Disket Mono](https://github.com/romeovs/disket) by Romeo Van Snick
 
